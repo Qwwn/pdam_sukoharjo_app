@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">PDAM App V2</string>
+    <string name="notification_settings">Pengaturan Notifikasi</string>
+    <string name="enable_notifications">Aktifkan Notifikasi</string>
+    <string name="notification_settings_description">Dapatkan pemberitahuan ketika ada berita terbaru dari PDAM</string>
+    <string name="back">Kembali</string>
+    <string name="notification_permission_rationale">Enable notifications to receive important updates from PDAM</string>
+</resources>

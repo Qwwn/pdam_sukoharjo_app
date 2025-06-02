@@ -1,0 +1,74 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio files
+*.iml
+.idea/
+.navigation/
+captures/
+
+# Keystore files
+*.jks
+*.keystore
+native-lib.cpp
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+google-services.xml
+
+# External native build folder
+.externalNativeBuild
+.cxx/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Firebase
+firebase-debug.log
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.flutter/
+
+# VS Code
+.vscode/
+
+# System Files
+*.swp
+*.swo
+*~

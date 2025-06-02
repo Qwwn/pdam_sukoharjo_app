@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Directory for photos captured with camera -->
+    <external-files-path name="my_images" path="Pictures" />
+    <external-files-path name="my_images" path="." />
+    <!-- Cache directory for temporary images -->
+    <external-cache-path name="my_cache_images" path="." />
+    <!-- Internal app cache -->
+    <cache-path name="app_cache" path="." />
+    <!-- For Android 10+ compatibility -->
+    <external-path name="external_files" path="." />
+</paths>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="welcome_title">Info Tagihan</string>
+    <string name="welcome_titleV2">Selamat Datang di SITAMPAN\nSistem Informasi Tagihan Air Minum Pasti NyamAN\nPERUMDA AIR MINUM\nTIRTA MAKMUR\nKAB.SUKORAJO</string>
+    <string name="app_name">Aplikasi Layanan Pelanggan</string>
+    <string name="welcome_message">Selamat Datang</string>
+    <string name="entity_name">PERUMDA AIR MINUM\nTIRTA MAKMUR\nKABUPATEN SUKOHARJO</string>
+    <string name="app_logo">Logo PDAM Tirta Makmur</string>
+    <!-- Form labels -->
+    <string name="customer_number">No Pelanggan</string>
+    <string name="customer_number_hint">Masukkan nomor pelanggan</string>
+    <string name="check_bill">Cek Tagihan</string>
+
+    <!-- FCM related strings -->
+    <string name="fcm_notification_title">PDAM Layanan</string>
+    <string name="fcm_news_title">Berita Terbaru</string>
+    <string name="fcm_announcement_title">Pengumuman</string>
+    <string name="fcm_default_body">Ada update terbaru untuk Anda</string>
+
+    <!-- Bill information -->
+    <string name="customer_info">Info Pelanggan</string>
+    <string name="bill_history_title">Riwayat Tagihan</string>
+    <string name="name">Nama</string>
+    <string name="address">Alamat</string>
+    <string name="tariff">Tarif</string>
+    <string name="customer_status">Status Pelanggan</string>
+    <string name="period">Periode Bulan</string>
+    <string name="meter_stand">Stand Meter</string>
+    <string name="usage">Pemakaian</string>
+    <string name="bill">Total Tagihan</string>
+    <string name="paid_status">LUNAS</string>
+    <string name="unpaid_status">BELUM LUNAS</string>
+    <string name="paid_date">Tgl</string>
+    <string name="view_meter_photo">Lihat Foto Meteran</string>
+    <string name="water_bill">Tagihan Air</string>
+    <string name="installment">Angsuran</string>
+    <string name="total_bill">Total Tagihan</string>
+    <string name="amercement">Denda</string>
+    <string name="total_bill_extend">Total Tagihan Sudah Termasuk Denda dan Angsuran. (Jika Ada)</string>
+    <string name="no_bill">Anda Tidak Memiliki Tagihan Yang Belum Lunas</string>
+    <string name="thank_you">Terima kasih telah membayar Rekening Air tepat waktu</string>
+    <string name="unpaid_bill">Tagihan Belum Lunas</string>
+
+    <!-- Loading and error messages -->
+    <string name="loading">Memuat data...</string>
+    <string name="error">Error: </string>
+    <string name="no_bill_history">Data tidak ditemukan</string>
+    <string name="try_again">Coba Lagi</string>
+    <string name="back">Kembali</string>
+    <string name="information_title">Informasi Tagihan</string>
+    <string name="bill_info_hint">Masukkan nomor pelanggan untuk melihat tagihan dan riwayat penggunaan air.</string>
+
+    <!-- Add all other error messages -->
+    <string name="error_network">Koneksi jaringan bermasalah</string>
+    <string name="error_no_data">Tidak ada data yang ditemukan</string>
+    <string name="error_http">Error HTTP: %d</string>
+
+    <string name="error_title">Perhatian</string>
+    <string name="error_unknown">Terjadi kesalahan. Silahkan coba lagi nanti.</string>
+    <string name="error_100">Request data sukses</string>
+    <string name="error_101">Pelanggan tidak memiliki tagihan</string>
+    <string name="error_102">Pelanggan tidak ditemukan</string>
+    <string name="error_103">Tagihan lebih dari 3 bulan. Silahkan hubungi kantor PDAM terdekat.</string>
+    <string name="error_104">Data tidak ditemukan. Silahkan periksa parameter dan kriteria-nya</string>
+    <string name="error_105">Kolektor tidak memiliki tagihan</string>
+    <string name="error_600">Access Denied. Invalid Api key</string>
+    <string name="error_601">Api key is missing or user on suspended</string>
+    <string name="error_900">Pelanggan tidak aktif. Silahkan hubungi Unit/Cabang PDAM Terdekat.</string>
+    <string name="back_to_home">Kembali</string>
+
+    <string name="complaint_screen_title">Pengaduan</string>
+    <string name="complaint_form_title">Form Pengaduan</string>
+    <string name="complaint_form_description">Silakan isi formulir pengaduan di bawah ini untuk melaporkan masalah atau keluhan Anda terkait layanan air.</string>
+    <string name="full_name">Nama Lengkap</string>
+    <string name="customer_no">Nomor Sambungan</string>
+    <string name="phone_number">Nomor Telepon</string>
+    <string name="email">Email</string>
+    <string name="complaint_text">Isi Pengaduan</string>
+    <string name="submit_complaint">Kirim Pengaduan</string>
+    <string name="complaint_success_title">Pengaduan Terkirim</string>
+    <string name="complaint_success_message">Terima kasih atas pengaduan Anda. Kami akan segera meninjau dan menindaklanjuti laporan tersebut.</string>
+    <string name="ok">OK</string>
+
+    <!-- Halaman carousell pertama -->
+    <string name="title_first_carousell">Informasi Pelanggan</string>
+    <string name="content_first_carousell">Dapatkan informasi tagihan PERUMDA AIR MINUM TIRTA MAKMUR KABUPATEN SUKOHARJO</string>
+    <string name="title_second_carousell">Informasi Pemadaman</string>
+    <string name="content_second_carousell">Dapatkan informasi pemadaman di lokasi Anda</string>
+    <string name="title_third_carousell">Berita</string>
+    <string name="content_third_carousell">Dapatkan berita tentang PDAM</string>
+</resources>
