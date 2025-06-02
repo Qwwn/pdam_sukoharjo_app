@@ -93,10 +93,6 @@
             android:exported="false"
             tools:node="merge"
             android:grantUriPermissions="true">
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup"
-                tools:node="remove" />
 
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"

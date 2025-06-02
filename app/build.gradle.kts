@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.pdam_app_v2"
+    namespace = "com.metromultindo.pdam_app_v2"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.pdam_app_v2"
+        applicationId = "com.metromultindo.pdam_app_v2"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
