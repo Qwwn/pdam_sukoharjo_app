@@ -23,6 +23,13 @@
     <!-- Location permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Explicitly remove advertising permissions -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE" tools:node="remove" />
+
     <uses-feature
         android:name="android.hardware.location"
         android:required="false" />
@@ -39,7 +46,7 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="@string/app_name2"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Pdam_app_v2"
@@ -52,41 +59,117 @@
             android:exported="true"
             android:theme="@style/Theme.Pdam_app_v2"
             android:launchMode="singleTop"
-            android:windowSoftInputMode="adjustResize">
-            <intent-filter>
+            android:windowSoftInputMode="adjustResize"
+            android:taskAffinity=""
+            android:alwaysRetainTaskState="true">
+
+            <!-- Main launcher intent -->
+            <intent-filter android:priority="1000">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <!-- Enhanced: Deep linking untuk notification -->
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="pdam"
+                    android:host="news_detail" />
+            </intent-filter>
+
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="pdam"
+                    android:host="news" />
+            </intent-filter>
+
+            <!-- PERBAIKAN: Action button URI filter -->
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="pdam"
+                    android:host="action" />
+            </intent-filter>
+
+            <!-- Enhanced: Notification action intents dengan priority tinggi -->
+            <intent-filter android:priority="1000">
+                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_NEWS_DETAIL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <intent-filter android:priority="1000">
+                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_NEWS_LIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- PERBAIKAN: Action button intent filter -->
+            <intent-filter android:priority="1000">
+                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_ACTION_NEWS_DETAIL" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+
+            <!-- Enhanced: Fallback untuk notification handling -->
+            <intent-filter android:priority="500">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="pdam" />
+            </intent-filter>
+
         </activity>
 
-        <!-- FCM Service -->
+        <!-- Enhanced FCM Service configuration -->
         <service
-            android:name=".service.PdamFCMService"
-            android:exported="false">
-            <intent-filter>
+            android:name=".services.PdamFCMService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:enabled="true">
+            <intent-filter android:priority="1000">
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
-        <!-- FCM default values -->
+        <!-- Disable Google Advertising ID -->
         <meta-data
-            android:name="com.google.firebase.messaging.default_notification_icon"
-            android:resource="@drawable/ic_notification" />
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
 
         <meta-data
-            android:name="com.google.firebase.messaging.default_notification_color"
-            android:resource="@color/notification_color" />
+            android:name="google_analytics_default_allow_ad_personalization_signals"
+            android:value="false" />
+
+        <!-- Disable Firebase Analytics automatic collection -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="pdam_news_channel" />
+            android:value="CHANNEL_ID" />
+
+        <!-- Enhanced: Notification importance -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_importance"
+            android:value="high" />
+
+        <!-- Enhanced: Auto-init FCM -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="true" />
+
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
 
         <!-- Google Play Services Location -->
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <!-- Disable default WorkManager initializer -->
+        <!-- File Provider -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
@@ -98,6 +181,16 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Enhanced: Broadcast receiver untuk notification events -->
+        <receiver
+            android:name=".services.NotificationBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_CLICKED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

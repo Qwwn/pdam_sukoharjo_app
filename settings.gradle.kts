@@ -2,7 +2,23 @@ pluginManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri("https://storage.googleapis.com/r8-releases/raw")
+        }
         gradlePluginPortal()
+    }
+
+    // FIX R8 Performance Issue
+    buildscript {
+        repositories {
+            mavenCentral()
+            maven {
+                url = uri("https://storage.googleapis.com/r8-releases/raw")
+            }
+        }
+        dependencies {
+            classpath("com.android.tools:r8:4.0.67")
+        }
     }
 }
 
@@ -16,4 +32,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "pdam_app_v2"
 include(":app")
- 

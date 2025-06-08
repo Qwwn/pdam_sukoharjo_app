@@ -11,4 +11,7 @@
     <!-- FCM Notification colors -->
     <color name="notification_color">#2196F3</color>
     <color name="notification_accent">#FF4081</color>
+    <color name="notification_icon_color">#0088FF</color>
+    <color name="notification_icon_color_white">#FF000000</color>
+
 </resources>

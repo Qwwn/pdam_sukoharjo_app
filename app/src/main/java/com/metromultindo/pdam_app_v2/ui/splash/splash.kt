@@ -24,12 +24,14 @@ import androidx.navigation.NavController
 import com.metromultindo.pdam_app_v2.utils.Constants
 import kotlinx.coroutines.delay
 import com.metromultindo.pdam_app_v2.R
+import android.util.Log
 
 @Composable
 fun SplashScreen(
     navController: NavController,
     onboardingCompleted: Boolean,
-    isLoggedIn: Boolean
+    isLoggedIn: Boolean,
+    skipSplash: Boolean = false // Parameter baru untuk skip splash
 ) {
     var startAnimation by remember { mutableStateOf(false) }
     val alphaAnim = animateFloatAsState(
@@ -38,6 +40,13 @@ fun SplashScreen(
             durationMillis = 1000
         )
     )
+
+    // Skip splash screen jika ada notification intent
+    if (skipSplash) {
+        Log.d("SplashScreen", "Skipping splash screen due to notification intent")
+        // Don't show splash content, let direct navigation handle
+        return
+    }
 
     LaunchedEffect(key1 = true) {
         startAnimation = true

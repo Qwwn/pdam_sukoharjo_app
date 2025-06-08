@@ -116,7 +116,7 @@ fun ContactScreen(
                             title = "WhatsApp",
                             content = "0821 1141 4111",
                             onClick = {
-                                val whatsappUri = Uri.parse("https://api.whatsapp.com/send?phone=6282111414111&text=Hallo%20PDAM%20Tirta%20Makmur%20Kab.%20Karanganyar")
+                                val whatsappUri = Uri.parse("https://api.whatsapp.com/send?phone=6282111414111&text=Hallo%20PDAM%20Tirta%20Makmur%20Kab.%20Sukoharjo")
                                 val whatsappIntent = Intent(Intent.ACTION_VIEW, whatsappUri)
                                 try {
                                     context.startActivity(whatsappIntent)

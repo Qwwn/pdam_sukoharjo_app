@@ -93,7 +93,7 @@ fun LoginScreen(
             ) {
 
                 Image(
-                    painter = painterResource(id = R.drawable.logo),
+                    painter = painterResource(id = R.mipmap.logo),
                     contentDescription = stringResource(id = R.string.app_logo),
                     modifier = Modifier
                         .size(140.dp)

@@ -1,8 +1,12 @@
-package com.metromultindo.pdam_app_v2.navigation
+package com.metromultindo.pdam_app_v2.ui.navigation
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -21,6 +25,7 @@ import com.metromultindo.pdam_app_v2.ui.onboarding.OnboardingViewModel
 import com.metromultindo.pdam_app_v2.ui.splash.SplashScreen
 import com.metromultindo.pdam_app_v2.ui.splash.SplashViewModel
 import com.metromultindo.pdam_app_v2.ui.complaint.ComplaintScreen
+import kotlinx.coroutines.delay
 
 sealed class Screen(val route: String) {
     object Splash : Screen("splash")
@@ -30,13 +35,14 @@ sealed class Screen(val route: String) {
     object CustomerInfo : Screen("customerInfo")
     object BillHistory : Screen("billHistory")
     object News : Screen("news")
-    object Outage : Screen("outage")
     object Contact : Screen("contact")
     object Complaint : Screen("complaint")
 }
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController
+) {
     val splashViewModel: SplashViewModel = hiltViewModel()
     val onboardingViewModel: OnboardingViewModel = hiltViewModel()
 
@@ -96,25 +102,62 @@ fun NavGraph(navController: NavHostController) {
             NewsScreen(navController = navController)
         }
 
-        composable(route = Screen.Contact.route) {
-            ContactScreen(navController = navController)
-        }
-
+        // Alias untuk news route (backward compatibility)
         composable("news") {
             NewsScreen(navController = navController)
         }
 
-        composable(
-            "newsDetail/{newsId}",
-            arguments = listOf(navArgument("newsId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val newsId = backStackEntry.arguments?.getInt("newsId") ?: 0
-            NewsDetailScreen(
-                navController = navController,
-                newsId = newsId
-            )
+        composable(route = Screen.Contact.route) {
+            ContactScreen(navController = navController)
         }
 
+        // News detail route - Simplified dan konsisten
+        composable(
+            route = "newsDetail/{newsId}",
+            arguments = listOf(
+                navArgument("newsId") {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val newsIdString = backStackEntry.arguments?.getString("newsId") ?: "0"
+
+            // Parse newsId dengan error handling
+            val newsId = try {
+                newsIdString.toIntOrNull() ?: 0
+            } catch (e: Exception) {
+                Log.e("NavGraph", "Error parsing newsId: $newsIdString", e)
+                0
+            }
+
+            Log.d("NavGraph", "Navigating to NewsDetailScreen - newsId: $newsId (from: $newsIdString)")
+
+            // Validasi newsId
+            if (newsId > 0) {
+                NewsDetailScreen(
+                    newsId = newsId,
+                    navController = navController
+                )
+            } else {
+                // Fallback ke news list jika newsId invalid
+                Log.w("NavGraph", "Invalid newsId: $newsId, redirecting to news list")
+
+                LaunchedEffect(Unit) {
+                    // Short delay untuk smooth transition
+                    delay(100)
+                    navController.navigate("news") {
+                        popUpTo("newsDetail/{newsId}") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+
+                // Show loading while redirecting
+                LoadingNewsDetail()
+            }
+        }
+
+        // Complaint screen route
         composable(
             route = "complaint?name={name}&number={number}",
             arguments = listOf(
@@ -136,5 +179,18 @@ fun NavGraph(navController: NavHostController) {
                 customerNumber = backStackEntry.arguments?.getString("number")
             )
         }
+    }
+}
+
+/**
+ * Loading component untuk news detail saat redirect
+ */
+@Composable
+private fun LoadingNewsDetail() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
     }
 }

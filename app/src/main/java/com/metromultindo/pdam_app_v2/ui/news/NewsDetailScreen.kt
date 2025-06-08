@@ -42,7 +42,7 @@ import androidx.navigation.NavController
 import com.metromultindo.pdam_app_v2.data.model.News
 import com.metromultindo.pdam_app_v2.ui.components.ErrorDialog
 import com.metromultindo.pdam_app_v2.ui.components.LoadingDialog
-import com.metromultindo.pdam_app_v2.utils.ZoomableImage  // PERBAIKAN: Import yang benar
+import com.metromultindo.pdam_app_v2.utils.ZoomableImage
 import com.metromultindo.pdam_app_v2.ui.theme.AppTheme
 import java.io.File
 import java.net.URLDecoder

@@ -1,11 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- res/drawable/ic_notification.xml -->
+<!-- Icon notifikasi yang konsisten untuk PDAM - Simple & Clear -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24"
     android:tint="?attr/colorOnPrimary">
+
+    <!-- Simple water drop icon (mudah terlihat di notification bar) -->
     <path
         android:fillColor="@android:color/white"
-        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2L11,7h2v2z"/>
+        android:pathData="M12,2C12,2 6.5,7.5 6.5,12.5C6.5,16.1 9.4,19 12,19C14.6,19 17.5,16.1 17.5,12.5C17.5,7.5 12,2 12,2Z"/>
+
+    <!-- Inner water drop untuk depth -->
+    <path
+        android:fillColor="#CCCCCC"
+        android:pathData="M12,4C12,4 8.5,8.5 8.5,12C8.5,14.5 10.2,16.5 12,16.5C13.8,16.5 15.5,14.5 15.5,12C15.5,8.5 12,4 12,4Z"
+        android:alpha="0.3"/>
+
+    <!-- Highlight untuk shine effect -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M10.5,6.5C10.5,6.5 9.5,8.5 9.5,10.5C9.5,11.3 10.2,12 11,12"/>
 </vector>

@@ -1,8 +1,3 @@
-// ===================================================================
-// IMPROVED NOTIFICATION PERMISSION UX
-// Update MainActivity.kt dengan UX yang lebih baik
-// ===================================================================
-
 package com.metromultindo.pdam_app_v2
 
 import android.Manifest
@@ -28,12 +23,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.metromultindo.pdam_app_v2.navigation.NavGraph
-import com.metromultindo.pdam_app_v2.service.FCMTokenManager
-import com.metromultindo.pdam_app_v2.service.NotificationHelper
+import com.metromultindo.pdam_app_v2.ui.navigation.NavGraph
+import com.metromultindo.pdam_app_v2.services.FCMTokenManager
+import com.metromultindo.pdam_app_v2.services.NotificationHelperFCM
+import com.metromultindo.pdam_app_v2.services.SimplifiedNotificationManager
+import com.metromultindo.pdam_app_v2.ui.components.LoadingDialog
 import com.metromultindo.pdam_app_v2.ui.theme.PdamAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -43,28 +42,45 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var fcmTokenManager: FCMTokenManager
 
-    // State untuk permission
+    private lateinit var navController: NavHostController
+    private var hasProcessedIntent = false
+
+    // UI States
     private var showPermissionDialog by mutableStateOf(false)
+    private var showNavigationLoading by mutableStateOf(false)
     private var permissionDeniedCount by mutableStateOf(0)
+
+    companion object {
+        private const val TAG = "MainActivity"
+    }
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
+            Log.d(TAG, "Notification permission granted")
             showPermissionDialog = false
             initializeFCM()
-            showSuccessMessage()
         } else {
+            Log.d(TAG, "Notification permission denied")
             permissionDeniedCount++
-            handlePermissionDenied()
+            if (permissionDeniedCount >= 2) {
+                showPermissionDialog = true
+            } else {
+                showPermissionDialog = false
+                initializeFCM()
+            }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        Log.d(TAG, "MainActivity onCreate")
+        logIntentDetails(intent, "onCreate")
+
         // Create notification channel
-        NotificationHelper.createNotificationChannel(this)
+        NotificationHelperFCM.createNotificationChannel(this)
 
         setContent {
             PdamAppTheme {
@@ -73,33 +89,46 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Box {
-                        val navController = rememberNavController()
+                        navController = rememberNavController()
 
-                        // Handle notification navigation
-                        LaunchedEffect(Unit) {
-                            handleNotificationIntent(navController)
+                        // Setup navigation manager
+                        LaunchedEffect(navController) {
+                            SimplifiedNotificationManager.setNavController(navController)
+
+                            // Setup loading state callback
+                            SimplifiedNotificationManager.onLoadingStateChanged = { isLoading ->
+                                showNavigationLoading = isLoading
+                            }
+
+                            // Check permission first
                             checkNotificationPermission()
+
+                            // Short delay for UI stability
+                            delay(200)
+
+                            // Process notification intent if exists
+                            if (!hasProcessedIntent) {
+                                processNotificationIntentIfExists()
+                                hasProcessedIntent = true
+                            }
                         }
 
-                        // Main content
+                        // Main navigation
                         NavGraph(navController = navController)
 
-                        // Permission dialog overlay
+                        // Loading dialog for navigation
+                        LoadingDialog(isShowing = showNavigationLoading)
+
+                        // Permission dialog
                         if (showPermissionDialog) {
                             NotificationPermissionDialog(
-                                onGrantPermission = {
-                                    requestNotificationPermission()
-                                },
+                                onGrantPermission = { requestNotificationPermission() },
                                 onDismiss = {
                                     if (permissionDeniedCount < 2) {
                                         showPermissionDialog = false
-                                        // Proceed without notification (graceful degradation)
-                                        proceedWithoutNotification()
                                     }
                                 },
-                                onOpenSettings = {
-                                    openNotificationSettings()
-                                },
+                                onOpenSettings = { openNotificationSettings() },
                                 showSettingsOption = permissionDeniedCount >= 2
                             )
                         }
@@ -109,18 +138,97 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        processIntent(intent)
+    }
+
+    private fun processIntent(intent: Intent?) {
+        intent?.let {
+            lifecycleScope.launch {
+                SimplifiedNotificationManager.processNotificationIntent(this@MainActivity, it)
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d(TAG, "onResume called")
+
+        // Process current intent on resume (untuk background to foreground)
+        lifecycleScope.launch {
+            delay(100) // Short delay for stability
+
+            if (SimplifiedNotificationManager.hasPendingNavigation()) {
+                Log.d(TAG, "Processing pending navigation on resume")
+                SimplifiedNotificationManager.forceProcessPending()
+            } else {
+                // Try to process current intent
+                SimplifiedNotificationManager.processNotificationIntent(this@MainActivity, intent)
+            }
+        }
+    }
+
+    /**
+     * Process notification intent jika ada saat onCreate
+     */
+    private suspend fun processNotificationIntentIfExists() {
+        try {
+            Log.d(TAG, "Checking for notification intent")
+
+            val processed = SimplifiedNotificationManager.processNotificationIntent(this, intent)
+            if (processed) {
+                Log.d(TAG, "Notification intent processed successfully")
+            } else {
+                Log.d(TAG, "No notification intent to process")
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error processing notification intent", e)
+        }
+    }
+
+    /**
+     * Log intent details untuk debugging
+     */
+    private fun logIntentDetails(intent: Intent?, source: String) {
+        Log.d(TAG, "=== Intent Details from $source ===")
+
+        if (intent == null) {
+            Log.d(TAG, "Intent is NULL")
+            return
+        }
+
+        Log.d(TAG, "Action: ${intent.action}")
+        Log.d(TAG, "Data: ${intent.data}")
+        Log.d(TAG, "Flags: ${intent.flags}")
+
+        intent.extras?.let { extras ->
+            Log.d(TAG, "Extras:")
+            for (key in extras.keySet()) {
+                val value = extras.get(key)
+                Log.d(TAG, "  $key: $value")
+            }
+        }
+
+        Log.d(TAG, "=== End Intent Details ===")
+    }
+
     private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             when (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
                 PackageManager.PERMISSION_GRANTED -> {
+                    Log.d(TAG, "Notification permission granted")
                     initializeFCM()
                 }
                 else -> {
-                    // Show dialog explaining why we need permission
+                    Log.d(TAG, "Requesting notification permission")
                     showPermissionDialog = true
                 }
             }
         } else {
+            Log.d(TAG, "Notification permission not required")
             initializeFCM()
         }
     }
@@ -131,87 +239,35 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun handlePermissionDenied() {
-        if (permissionDeniedCount >= 2) {
-            // User denied multiple times, show settings option
-            showPermissionDialog = true
-        } else {
-            // First denial, proceed without notification but show info
-            showPermissionDialog = false
-            proceedWithoutNotification()
-        }
-    }
-
     private fun openNotificationSettings() {
         try {
-            val intent = Intent().apply {
-                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.fromParts("package", packageName, null)
             }
             startActivity(intent)
             showPermissionDialog = false
         } catch (e: Exception) {
+            Log.e(TAG, "Error opening notification settings", e)
         }
-    }
-
-    private fun proceedWithoutNotification() {
-        // App tetap bisa digunakan, tapi tanpa push notification
-        // User bisa enable notification nanti via app settings
-    }
-
-    private fun showSuccessMessage() {
-        // Optional: Show toast or snackbar
     }
 
     private fun initializeFCM() {
+        Log.d(TAG, "Initializing FCM")
 
         lifecycleScope.launch {
             try {
-                // Initialize FCM and register token
                 fcmTokenManager.initializeFCM()
-
-                // Subscribe to news topic for general news notifications
                 fcmTokenManager.subscribeToNewsTopic()
-
+                Log.d(TAG, "FCM initialized successfully")
             } catch (e: Exception) {
+                Log.e(TAG, "Error initializing FCM", e)
             }
         }
     }
 
-    private fun handleNotificationIntent(navController: androidx.navigation.NavController) {
-        val navigateTo = intent?.getStringExtra("navigate_to")
-        val newsId = intent?.getStringExtra("news_id")
-
-        Log.d("MainActivity", "Handling notification intent - navigateTo: $navigateTo, newsId: $newsId")
-
-        when (navigateTo) {
-            "news_detail" -> {
-                newsId?.let {
-                    Log.d("MainActivity", "Navigating to news detail: $it")
-                    navController.navigate("newsDetail/$it")
-                }
-            }
-            "news" -> {
-                navController.navigate("news")
-            }
-        }
-
-        // Clear the intent extras to prevent re-navigation
-        intent?.removeExtra("navigate_to")
-        intent?.removeExtra("news_id")
-    }
-
-    override fun onNewIntent(intent: android.content.Intent?) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-
-        // Handle new notification when app is already running
-        intent?.let {
-            val navigateTo = it.getStringExtra("navigate_to")
-            val newsId = it.getStringExtra("news_id")
-
-            Log.d("MainActivity", "New intent received - navigateTo: $navigateTo, newsId: $newsId")
-        }
+    override fun onDestroy() {
+        super.onDestroy()
+        SimplifiedNotificationManager.reset()
     }
 }
 
@@ -234,7 +290,7 @@ fun NotificationPermissionDialog(
         },
         title = {
             Text(
-                text = "Dapatkan Update Berita Terbaru",
+                text = "Dapatkan Informasi Terbaru",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -243,9 +299,9 @@ fun NotificationPermissionDialog(
         text = {
             Column {
                 Text(
-                    text = "Izinkan notifikasi untuk mendapatkan:",
+                    text = "Aktifkan notifikasi untuk mendapatkan:",
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
 
                 val benefits = listOf(
@@ -264,12 +320,20 @@ fun NotificationPermissionDialog(
                 }
 
                 if (showSettingsOption) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Izin ditolak. Untuk mengaktifkan notifikasi, buka Pengaturan → Aplikasi → PDAM → Notifikasi.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Izin notifikasi telah ditolak. Silakan buka Pengaturan untuk mengaktifkan.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(12.dp)
+                        )
+                    }
                 }
             }
         },
@@ -286,103 +350,16 @@ fun NotificationPermissionDialog(
                     onClick = onGrantPermission,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Izinkan Notifikasi")
+                    Text("Aktifkan Notifikasi")
                 }
             }
         },
         dismissButton = {
             if (!showSettingsOption) {
-                TextButton(
-                    onClick = onDismiss
-                ) {
+                TextButton(onClick = onDismiss) {
                     Text("Nanti Saja")
                 }
             }
         }
     )
-}
-
-@Composable
-fun NotificationSettingsCard(
-    isPermissionGranted: Boolean,
-    onRequestPermission: () -> Unit,
-    onOpenSettings: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Notifications,
-                    contentDescription = "Notifications",
-                    tint = if (isPermissionGranted)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.error
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = "Notifikasi Push",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = if (isPermissionGranted)
-                            "Aktif - Anda akan menerima update berita terbaru"
-                        else
-                            "Nonaktif - Aktifkan untuk mendapatkan update berita",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                Switch(
-                    checked = isPermissionGranted,
-                    onCheckedChange = {
-                        if (!isPermissionGranted) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                onRequestPermission()
-                            } else {
-                                onOpenSettings()
-                            }
-                        } else {
-                            onOpenSettings()
-                        }
-                    }
-                )
-            }
-
-            if (!isPermissionGranted) {
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            onRequestPermission()
-                        } else {
-                            onOpenSettings()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Aktifkan Notifikasi")
-                }
-            }
-        }
-    }
 }

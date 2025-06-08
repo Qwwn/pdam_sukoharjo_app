@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
     id("dagger.hilt.android.plugin")
-    id("com.google.gms.google-services") // Tambah plugin Firebase
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -14,8 +14,8 @@ android {
         applicationId = "com.metromultindo.pdam_app_v2"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.1"
+        versionCode = 8
+        versionName = "1.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -53,7 +53,8 @@ android {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")
             }
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -68,7 +69,6 @@ android {
         }
     }
 
-    // Add this if you get linking errors
     packaging {
         jniLibs {
             useLegacyPackaging = true
@@ -92,6 +92,19 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.2"
     }
+}
+
+// Global excludes untuk menghilangkan advertising dependencies
+configurations.all {
+    exclude (group = "com.google.firebase", module = "firebase-analytics")
+    exclude (group =  "com.google.firebase", module = "firebase-analytics-ktx")
+    exclude (group = "com.google.firebase", module = "firebase-measurement-connector")
+    exclude (group = "com.google.android.gms", module = "play-services-ads-identifier")
+    exclude (group = "com.google.android.gms", module = "play-services-measurement")
+    exclude (group = "com.google.android.gms", module = "play-services-measurement-api")
+    exclude (group = "com.google.android.gms", module = "play-services-measurement-sdk")
+    exclude (group = "com.google.android.gms", module = "play-services-measurement-impl")
+    exclude (group = "com.google.android.gms", module = "play-services-measurement-base")
 }
 
 dependencies {
@@ -127,12 +140,16 @@ dependencies {
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // Firebase BOM - PENTING: Pastikan menggunakan versi terbaru
+    // Firebase BOM
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-messaging-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
 
-    // WorkManager - Tetap untuk backup/fallback
+    // HANYA Firebase Messaging tanpa Analytics
+    implementation("com.google.firebase:firebase-messaging-ktx")
+
+    // HAPUS firebase-analytics-ktx sepenuhnya
+    // implementation("com.google.firebase:firebase-analytics-ktx") // DIHAPUS!
+
+    // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     // Dagger Hilt - Core
@@ -162,12 +179,18 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    implementation ("com.github.skydoves:landscapist-glide:2.2.10")
-    implementation ("com.github.skydoves:landscapist-transformation:2.2.10")
+    implementation("com.github.skydoves:landscapist-glide:2.2.10")
+    implementation("com.github.skydoves:landscapist-transformation:2.2.10")
 
-    implementation ("com.google.android.gms:play-services-location:21.0.1")
-    implementation ("com.google.android.gms:play-services-maps:18.2.0")
-
+    // Google Play Services - dengan exclude advertising
+    implementation("com.google.android.gms:play-services-location:21.0.1") {
+        exclude(group = "com.google.android.gms", module = "play-services-ads-identifier")
+        exclude(group = "com.google.android.gms", module = "play-services-measurement")
+    }
+    implementation("com.google.android.gms:play-services-maps:18.2.0") {
+        exclude (group = "com.google.android.gms", module = "play-services-ads-identifier")
+        exclude (group = "com.google.android.gms", module = "play-services-measurement")
+    }
 }
 
 // Kapt configuration

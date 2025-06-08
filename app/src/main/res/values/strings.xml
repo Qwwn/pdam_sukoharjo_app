@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="welcome_title">Info Tagihan</string>
-    <string name="welcome_titleV2">Selamat Datang di SITAMPAN\nSistem Informasi Tagihan Air Minum Pasti NyamAN\nPERUMDA AIR MINUM\nTIRTA MAKMUR\nKAB.SUKORAJO</string>
+    <string name="welcome_titleV2">Selamat Datang di SITAMPAN\nSistem Informasi Tagihan Air Minum Pasti NyamAN\nPERUMDA AIR MINUM\nTIRTA MAKMUR\nKAB.SUKOHARJO</string>
     <string name="app_name">Aplikasi Layanan Pelanggan</string>
     <string name="welcome_message">Selamat Datang</string>
     <string name="entity_name">PERUMDA AIR MINUM\nTIRTA MAKMUR\nKABUPATEN SUKOHARJO</string>
@@ -16,6 +16,7 @@
     <string name="fcm_news_title">Berita Terbaru</string>
     <string name="fcm_announcement_title">Pengumuman</string>
     <string name="fcm_default_body">Ada update terbaru untuk Anda</string>
+    <string name="app_name2">PDAM SUKOHARJO</string>
 
     <!-- Bill information -->
     <string name="customer_info">Info Pelanggan</string>
