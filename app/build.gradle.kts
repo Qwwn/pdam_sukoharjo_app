@@ -7,15 +7,15 @@ plugins {
 }
 
 android {
-    namespace = "com.metromultindo.pdam_app_v2"
+    namespace = "com.metromultindo.tirtamakmur"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.metromultindo.pdam_app_v2"
+        applicationId = "com.metromultindo.tirtamakmur"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.8"
+        versionCode = 1
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

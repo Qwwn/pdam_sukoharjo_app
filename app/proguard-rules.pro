@@ -5,11 +5,11 @@
 -renamesourcefileattribute SourceFile
 
 # Keep main app classes
--keep class com.metromultindo.pdam_app_v2.** { *; }
+-keep class com.metromultindo.tirtamakmur.** { *; }
 
 # Keep data models (API responses)
--keep class com.metromultindo.pdam_app_v2.data.model.** { *; }
--keep class com.metromultindo.pdam_app_v2.data.response.** { *; }
+-keep class com.metromultindo.tirtamakmur.data.model.** { *; }
+-keep class com.metromultindo.tirtamakmur.data.response.** { *; }
 
 # Firebase
 -keep class com.google.firebase.** { *; }

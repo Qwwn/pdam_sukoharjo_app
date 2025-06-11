@@ -30,5 +30,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "pdam_app_v2"
+rootProject.name = "tirtamakmur"
 include(":app")
