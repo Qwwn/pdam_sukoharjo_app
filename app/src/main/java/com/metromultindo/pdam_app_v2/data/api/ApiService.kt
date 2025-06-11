@@ -5,7 +5,9 @@ import com.metromultindo.pdam_app_v2.data.model.ComplaintResponse
 import com.metromultindo.pdam_app_v2.data.model.CustomerResponse
 import com.metromultindo.pdam_app_v2.data.model.FCMResponse
 import com.metromultindo.pdam_app_v2.data.model.NewsResponse
+import com.metromultindo.pdam_app_v2.data.model.SelfMeterResponse
 import com.metromultindo.pdam_app_v2.data.model.SingleNewsResponse
+import com.metromultindo.pdam_app_v2.data.model.UpdatePhoneResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.*
@@ -74,4 +76,23 @@ interface ApiService {
         @Query("title") title: String = "Test Notification",
         @Query("body") body: String = "This is a test notification"
     ): FCMResponse
+
+    @Multipart
+    @POST("/servicesWithCmp/self-meter")
+    suspend fun submitSelfMeterReading(
+        @Header("Authorization") auth: String = Keys.API_KEY,
+        @Part("cust_code") custCode: RequestBody,
+        @Part("self_standmtr") standMeter: RequestBody,
+        @Part("latitude") latitude: RequestBody?,
+        @Part("longitude") longitude: RequestBody?,
+        @Part meter_image: MultipartBody.Part?
+    ): SelfMeterResponse
+
+    @FormUrlEncoded
+    @POST("/servicesWithCmp/updateCustomerPhone")
+    suspend fun updateCustomerPhone(
+        @Field("nosambung") customerNumber: String,
+        @Field("phone") phone: String,
+        @Header("Authorization") auth: String = Keys.API_KEY
+    ): UpdatePhoneResponse
 }

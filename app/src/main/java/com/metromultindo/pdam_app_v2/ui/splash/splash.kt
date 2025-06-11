@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.metromultindo.pdam_app_v2.utils.Constants
 import kotlinx.coroutines.delay
-import com.metromultindo.pdam_app_v2.R
 import android.util.Log
+import com.metromultindo.pdam_app_v2.R
 
 @Composable
 fun SplashScreen(

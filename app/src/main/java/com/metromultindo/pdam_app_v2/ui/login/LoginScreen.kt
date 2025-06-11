@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import com.metromultindo.pdam_app_v2.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
@@ -29,7 +30,6 @@ import com.metromultindo.pdam_app_v2.ui.components.ErrorDialog
 import com.metromultindo.pdam_app_v2.ui.components.LoadingDialog
 import com.metromultindo.pdam_app_v2.ui.theme.AppTheme
 import java.util.Calendar
-import com.metromultindo.pdam_app_v2.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -209,11 +209,9 @@ fun LoginScreen(
 
                 // Info card
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
                 ) {
                     Row(
                         modifier = Modifier

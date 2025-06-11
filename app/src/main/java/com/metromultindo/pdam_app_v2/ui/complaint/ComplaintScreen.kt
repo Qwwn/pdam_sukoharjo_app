@@ -16,6 +16,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import com.metromultindo.pdam_app_v2.R
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -44,11 +45,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import com.metromultindo.pdam_app_v2.R
 import com.metromultindo.pdam_app_v2.ui.components.ErrorDialog
 import com.metromultindo.pdam_app_v2.ui.components.LoadingDialog
 import com.metromultindo.pdam_app_v2.ui.theme.AppTheme
-import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine

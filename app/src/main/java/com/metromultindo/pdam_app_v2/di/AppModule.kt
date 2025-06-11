@@ -14,6 +14,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.metromultindo.pdam_app_v2.data.repository.SelfMeterRepository
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -55,6 +56,15 @@ object AppModule {
         @ApplicationContext context: Context
     ): LocationHelper {
         return LocationHelper(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSelfMeterRepository(
+        apiService: ApiService,
+        @ApplicationContext context: Context
+    ): SelfMeterRepository {
+        return SelfMeterRepository(apiService, context)
     }
 
 }

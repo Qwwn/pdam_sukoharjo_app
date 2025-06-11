@@ -5,7 +5,6 @@ import android.app.DownloadManager
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
-import com.metromultindo.pdam_app_v2.R
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -46,6 +45,7 @@ import com.metromultindo.pdam_app_v2.utils.ZoomableImage
 import com.metromultindo.pdam_app_v2.ui.theme.AppTheme
 import java.io.File
 import java.net.URLDecoder
+import com.metromultindo.pdam_app_v2.R
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)

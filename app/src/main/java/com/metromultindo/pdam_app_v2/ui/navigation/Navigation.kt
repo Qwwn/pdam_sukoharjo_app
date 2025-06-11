@@ -25,6 +25,7 @@ import com.metromultindo.pdam_app_v2.ui.onboarding.OnboardingViewModel
 import com.metromultindo.pdam_app_v2.ui.splash.SplashScreen
 import com.metromultindo.pdam_app_v2.ui.splash.SplashViewModel
 import com.metromultindo.pdam_app_v2.ui.complaint.ComplaintScreen
+import com.metromultindo.pdam_app_v2.ui.selfmeter.SelfMeterScreen
 import kotlinx.coroutines.delay
 
 sealed class Screen(val route: String) {
@@ -100,6 +101,10 @@ fun NavGraph(
 
         composable(route = Screen.News.route) {
             NewsScreen(navController = navController)
+        }
+
+        composable("selfMeter") {
+            SelfMeterScreen(navController = navController)
         }
 
         // Alias untuk news route (backward compatibility)

@@ -26,7 +26,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
-import com.metromultindo.pdam_app_v2.R
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
@@ -43,6 +42,7 @@ import com.metromultindo.pdam_app_v2.ui.theme.AppTheme
 import com.metromultindo.pdam_app_v2.utils.formatCurrency
 import java.text.NumberFormat
 import java.util.Locale
+import com.metromultindo.pdam_app_v2.R
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)

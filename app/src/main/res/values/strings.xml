@@ -89,4 +89,9 @@
     <string name="content_second_carousell">Dapatkan informasi pemadaman di lokasi Anda</string>
     <string name="title_third_carousell">Berita</string>
     <string name="content_third_carousell">Dapatkan berita tentang PDAM</string>
+
+    <string name="self_meter_title">Baca Meter Mandiri</string>
+    <string name="meter_reading">Angka Stand Meter</string>
+    <string name="take_photo">Ambil Foto Meter</string>
+    <string name="location_status">Status Lokasi</string>
 </resources>

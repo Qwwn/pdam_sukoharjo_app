@@ -26,6 +26,9 @@ import com.metromultindo.pdam_app_v2.ui.theme.AppTheme
 import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 import java.util.Calendar
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.metromultindo.pdam_app_v2.R
 
 data class MenuItem(
@@ -88,6 +91,13 @@ fun HomeScreen(
             requiresLogin = true
         ),
         MenuItem(
+            title = "Baca Meter",
+            icon = Icons.Outlined.Speed,
+            route = "selfMeter",
+            color = Color(0xFF2196F3),
+            requiresLogin = false
+        ),
+        MenuItem(
             title = "Pengaduan",
             icon = Icons.Outlined.ReportProblem,
             route = "complaint",
@@ -148,7 +158,8 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()), // TAMBAHKAN BARIS INI
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header with logo and welcome message
