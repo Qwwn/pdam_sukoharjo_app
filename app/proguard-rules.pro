@@ -1,4 +1,4 @@
-# PDAM App ProGuard Rules - ERROR FREE VERSION
+#ProGuard Rules - ERROR FREE VERSION
 
 # Keep line numbers and source file for debugging
 -keepattributes LineNumberTable,SourceFile

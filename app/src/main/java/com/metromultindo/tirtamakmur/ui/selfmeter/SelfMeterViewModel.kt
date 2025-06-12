@@ -1,4 +1,4 @@
-// SelfMeterViewModel.kt - Updated with combined load and phone update functionality
+// SelfMeterViewModel.kt - Updated with separated load and phone update functionality
 package com.metromultindo.tirtamakmur.ui.selfmeter
 
 import android.net.Uri
@@ -121,6 +121,8 @@ class SelfMeterViewModel @Inject constructor(
                                 startMeter = custStartMeter,
                                 phone = custPhone
                             )
+
+                            Log.d("SelfMeterViewModel", "Customer info loaded successfully for: $custCode")
                         } else {
                             _errorState.value = Pair(response.message_code, response.message_text)
                         }
@@ -139,113 +141,7 @@ class SelfMeterViewModel @Inject constructor(
         }
     }
 
-    // NEW METHOD: Combined load customer info and update phone
-    fun loadCustomerInfoWithPhoneUpdate(customerNumber: String, phoneNumber: String) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            _errorState.value = null
-
-            try {
-                // Step 1: Load customer info
-                Log.d("SelfMeterViewModel", "Loading customer info for: $customerNumber")
-                val customerResult = repository.getCustomerInfo(customerNumber)
-
-                customerResult.fold(
-                    onSuccess = { response ->
-                        if (!response.error) {
-                            // Parse customer data
-                            val custName = if (response.cust_name == "-" && response.cust_data.isNotEmpty()) {
-                                response.cust_data.first().name
-                            } else {
-                                response.cust_name ?: "Tidak diketahui"
-                            }
-
-                            val custCode = if (response.cust_code == "-" && response.cust_data.isNotEmpty()) {
-                                response.cust_data.first().customerNumber
-                            } else {
-                                response.cust_code ?: customerNumber
-                            }
-
-                            val custAddress = if (response.cust_address == "-" && response.cust_data.isNotEmpty()) {
-                                response.cust_data.first().address
-                            } else {
-                                response.cust_address ?: "Tidak diketahui"
-                            }
-
-                            val custTariffClass = when {
-                                response.cust_data.isNotEmpty() -> {
-                                    response.cust_data.first().tariffClass ?: "Tidak diketahui"
-                                }
-                                !response.tarif_class.isNullOrEmpty() && response.tarif_class != "-" -> {
-                                    response.tarif_class
-                                }
-                                else -> "Tidak diketahui"
-                            }
-
-                            val custStartMeter = if (response.cust_data.isNotEmpty()) {
-                                response.cust_data.first().startMeter.toString()
-                            } else {
-                                "Tidak diketahui"
-                            }
-
-                            Log.d("SelfMeterViewModel", "Customer data loaded successfully, updating phone number")
-
-                            // Step 2: Update phone number
-                            val phoneResult = repository.updateCustomerPhone(custCode, phoneNumber)
-
-                            phoneResult.fold(
-                                onSuccess = { phoneResponse ->
-                                    if (!phoneResponse.error) {
-                                        // Success: Set customer info with updated phone
-                                        _customerInfo.value = SelfMeterCustomerInfo(
-                                            custCode = custCode,
-                                            name = custName,
-                                            address = custAddress,
-                                            tariffClass = custTariffClass,
-                                            startMeter = custStartMeter,
-                                            phone = phoneNumber // Use the new phone number
-                                        )
-
-                                        _phoneUpdateSuccess.value = true
-                                        Log.d("SelfMeterViewModel", "Customer loaded and phone updated successfully")
-                                    } else {
-                                        _errorState.value = Pair(phoneResponse.messageCode, phoneResponse.messageText)
-                                    }
-                                },
-                                onFailure = { exception ->
-                                    Log.e("SelfMeterViewModel", "Error updating phone", exception)
-                                    _errorState.value = Pair(500, "Data pelanggan berhasil dimuat, tetapi gagal memperbarui nomor WhatsApp")
-
-                                    // Still set customer info even if phone update failed
-                                    _customerInfo.value = SelfMeterCustomerInfo(
-                                        custCode = custCode,
-                                        name = custName,
-                                        address = custAddress,
-                                        tariffClass = custTariffClass,
-                                        startMeter = custStartMeter,
-                                        phone = response.cust_phone ?: ""
-                                    )
-                                }
-                            )
-                        } else {
-                            _errorState.value = Pair(response.message_code, response.message_text)
-                        }
-                    },
-                    onFailure = { exception ->
-                        Log.e("SelfMeterViewModel", "Error loading customer info", exception)
-                        _errorState.value = Pair(500, "Gagal memuat data pelanggan")
-                    }
-                )
-            } catch (e: Exception) {
-                Log.e("SelfMeterViewModel", "Unexpected error", e)
-                _errorState.value = Pair(500, "Terjadi kesalahan: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    // Update customer phone (existing method)
+    // Update customer phone
     fun updateCustomerPhone(customerNumber: String, phone: String) {
         viewModelScope.launch {
             _phoneUpdateLoading.value = true
@@ -270,7 +166,7 @@ class SelfMeterViewModel @Inject constructor(
                     },
                     onFailure = { exception ->
                         Log.e("SelfMeterViewModel", "Error updating phone", exception)
-                        _errorState.value = Pair(500, "Gagal memperbarui nomor telepon}")
+                        _errorState.value = Pair(500, "Gagal memperbarui nomor telepon")
                     }
                 )
             } catch (e: Exception) {

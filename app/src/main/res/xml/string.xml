@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PDAM App V2</string>
+    <string name="app_name">Aplikasi Layanan Pelanggan</string>
     <string name="notification_settings">Pengaturan Notifikasi</string>
     <string name="enable_notifications">Aktifkan Notifikasi</string>
     <string name="notification_settings_description">Dapatkan pemberitahuan ketika ada berita terbaru dari PDAM</string>
