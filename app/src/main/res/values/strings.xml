@@ -7,8 +7,8 @@
     <string name="entity_name">PERUMDA AIR MINUM\nTIRTA MAKMUR\nKABUPATEN SUKOHARJO</string>
     <string name="app_logo">Logo PDAM Tirta Makmur</string>
     <!-- Form labels -->
-    <string name="customer_number">No Pelanggan</string>
-    <string name="customer_number_hint">Masukkan nomor pelanggan</string>
+    <string name="customer_number">Id Pel / No Samb</string>
+    <string name="customer_number_hint">Ketik Id Pel / No Samb</string>
     <string name="check_bill">Cek Tagihan</string>
 
     <!-- FCM related strings -->
@@ -49,7 +49,7 @@
     <string name="try_again">Coba Lagi</string>
     <string name="back">Kembali</string>
     <string name="information_title">Informasi Tagihan</string>
-    <string name="bill_info_hint">Masukkan nomor pelanggan untuk melihat tagihan dan riwayat penggunaan air.</string>
+    <string name="bill_info_hint">Masukkan Id Pel / No Samb untuk melihat tagihan dan riwayat penggunaan air.</string>
 
     <!-- Add all other error messages -->
     <string name="error_network">Koneksi jaringan bermasalah</string>
@@ -57,6 +57,7 @@
     <string name="error_http">Error HTTP: %d</string>
 
     <string name="error_title">Perhatian</string>
+    <string name="error_title2">Gagal Mengambil Data</string>
     <string name="error_unknown">Terjadi kesalahan. Silahkan coba lagi nanti.</string>
     <string name="error_100">Request data sukses</string>
     <string name="error_101">Pelanggan tidak memiliki tagihan</string>
@@ -73,7 +74,7 @@
     <string name="complaint_form_title">Form Pengaduan</string>
     <string name="complaint_form_description">Silakan isi formulir pengaduan di bawah ini untuk melaporkan masalah atau keluhan Anda terkait layanan air.</string>
     <string name="full_name">Nama Lengkap</string>
-    <string name="customer_no">Nomor Sambungan</string>
+    <string name="customer_no">Id Pel / No Samb</string>
     <string name="phone_number">Nomor Telepon</string>
     <string name="email">Email</string>
     <string name="complaint_text">Isi Pengaduan</string>

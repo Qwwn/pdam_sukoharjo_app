@@ -54,6 +54,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.metromultindo.tirtamakmur.ui.components.ErrorDialog2
 import com.metromultindo.tirtamakmur.ui.customer.InfoRow
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -78,6 +79,8 @@ fun SelfMeterScreen(
     // Phone update states
     val phoneUpdateSuccess = viewModel.phoneUpdateSuccess.collectAsState()
     val phoneUpdateLoading = viewModel.phoneUpdateLoading.collectAsState()
+
+    val savedCustomerNumber = viewModel.savedCustomerNumber.collectAsState()
 
     // Local state
     var customerNumber by remember { mutableStateOf("") }
@@ -104,6 +107,18 @@ fun SelfMeterScreen(
     // Phone edit states
     var isEditingPhone by remember { mutableStateOf(false) }
     var tempPhoneNumber by remember { mutableStateOf("") }
+
+    LaunchedEffect(savedCustomerNumber.value) {
+        if (isLoggedIn.value && customerNumber.isEmpty() && !savedCustomerNumber.value.isNullOrEmpty()) {
+            customerNumber = savedCustomerNumber.value!!
+        }
+    }
+
+    LaunchedEffect(customerInfo.value) {
+        customerInfo.value?.let { info ->
+            editPhoneNumber = info.phone
+        }
+    }
 
     // Helper functions (same as before)
     fun hasLocationPermission(): Boolean {
@@ -134,6 +149,16 @@ fun SelfMeterScreen(
             } catch (e2: Exception) {
                 Log.e("SelfMeterScreen", "Cannot open settings", e2)
             }
+        }
+    }
+
+    fun isValidWhatsAppNumber(phoneNumber: String): Boolean {
+        val cleanNumber = phoneNumber.replace(" ", "").replace("-", "")
+        return when {
+            cleanNumber.startsWith("0") && cleanNumber.length >= 9 -> true
+            cleanNumber.startsWith("62") && cleanNumber.length >= 10 -> true
+            cleanNumber.startsWith("+62") && cleanNumber.length >= 11 -> true
+            else -> false
         }
     }
 
@@ -305,13 +330,6 @@ fun SelfMeterScreen(
         }
     }
 
-    // Initialize phone number when customer info is loaded
-    LaunchedEffect(customerInfo.value) {
-        customerInfo.value?.let { info ->
-            editPhoneNumber = info.phone
-        }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -361,7 +379,7 @@ fun SelfMeterScreen(
             }
 
             // Customer Number Input (if not logged in and customer info not loaded)
-            if (!isLoggedIn.value && customerInfo.value == null) {
+            if (customerInfo.value == null) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(4.dp),
@@ -379,10 +397,10 @@ fun SelfMeterScreen(
                         OutlinedTextField(
                             value = customerNumber,
                             onValueChange = { customerNumber = it },
-                            label = { Text("No Sambung") },
+                            label = { Text("Id Pel / No Samb") },
                             modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Icon(Icons.Default.Numbers, "No Sambung") },
-                            placeholder = { Text("Masukkan No Sambung") }
+                            leadingIcon = { Icon(Icons.Default.Numbers, "Id Pel / No Samb") },
+                            placeholder = { Text("Ketik Id Pel / No Samb") }
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -429,7 +447,7 @@ fun SelfMeterScreen(
                         Column {
 
                             BillDetailRow(
-                                label = "No Sambung",
+                                label = "Id Pel / No Samb",
                                 value = info.custCode,
                                 icon = Icons.Default.Numbers
                             )
@@ -479,7 +497,10 @@ fun SelfMeterScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 leadingIcon = { Icon(Icons.Default.Phone, "WhatsApp") },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                            )
+                                isError = tempPhoneNumber.isNotEmpty() && !isValidWhatsAppNumber(tempPhoneNumber), // Tambah validasi visual
+                                supportingText = if (tempPhoneNumber.isNotEmpty() && !isValidWhatsAppNumber(tempPhoneNumber)) {
+                                    { Text("Format nomor tidak valid. Harus diawali 0 atau 62 dan minimal 9 digit", color = MaterialTheme.colorScheme.error) }
+                                } else null                            )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -504,7 +525,9 @@ fun SelfMeterScreen(
                                         isEditingPhone = false
                                     },
                                     modifier = Modifier.weight(1f),
-                                    enabled = tempPhoneNumber.isNotEmpty() && !phoneUpdateLoading.value
+                                    enabled = tempPhoneNumber.isNotEmpty() &&
+                                            isValidWhatsAppNumber(tempPhoneNumber) && // Tambah validasi
+                                            !phoneUpdateLoading.value
                                 ) {
                                     if (phoneUpdateLoading.value) {
                                         CircularProgressIndicator(
@@ -722,6 +745,23 @@ fun SelfMeterScreen(
                         Button(
                             onClick = {
                                 // Validasi nomor WhatsApp terlebih dahulu
+
+                                if (!isValidWhatsAppNumber(editPhoneNumber)) {
+                                    viewModel.setError(400, "Format nomor WhatsApp tidak valid. Harus diawali 0 atau 62 dan minimal 9 digit")
+                                    return@Button
+                                }
+
+                                // Validasi foto dan lokasi
+                                if (imageUri == null) {
+                                    viewModel.setError(400, "Foto meter wajib disertakan")
+                                    return@Button
+                                }
+
+                                if (currentLatitude == null || currentLongitude == null) {
+                                    viewModel.setError(400, "Lokasi wajib disertakan")
+                                    return@Button
+                                }
+
                                 if (editPhoneNumber.isEmpty()) {
                                     showWhatsAppErrorDialog = true
                                     return@Button
@@ -858,7 +898,7 @@ fun SelfMeterScreen(
             LoadingDialog(isLoading.value || phoneUpdateLoading.value)
 
             errorState.value?.let { error ->
-                ErrorDialog(
+                ErrorDialog2(
                     errorCode = error.first,
                     errorMessage = error.second,
                     onDismiss = { viewModel.clearError() }
@@ -872,7 +912,7 @@ fun SelfMeterScreen(
                         navController.navigateUp()
                     },
                     title = { Text("Data Terkirim") },
-                    text = { Text("Data meter berhasil dikirim. Terima kasih atas partisipasi Anda.") },
+                    text = { Text("Data meter berhasil dikirim.") },
                     confirmButton = {
                         Button(
                             onClick = {

@@ -45,7 +45,7 @@ class LoginViewModel @Inject constructor(
 
     fun login() {
         if (_customerNumber.value.isEmpty()) {
-            _errorState.value = Pair(1, "Mohon masukkan nomor pelanggan")
+            _errorState.value = Pair(1, "Mohon masukkan Id Pel / No Samb")
             return
         }
 

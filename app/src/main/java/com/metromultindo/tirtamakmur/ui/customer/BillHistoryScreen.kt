@@ -169,7 +169,7 @@ fun BillHistoryScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
-                                            text = "No. Sambung",
+                                            text = "Id Pel / No Samb",
                                             style = MaterialTheme.typography.bodySmall,
                                         )
                                         Text(

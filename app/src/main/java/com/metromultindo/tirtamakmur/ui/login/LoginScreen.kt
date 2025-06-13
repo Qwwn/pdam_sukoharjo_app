@@ -30,6 +30,7 @@ import com.metromultindo.tirtamakmur.ui.components.LoadingDialog
 import com.metromultindo.tirtamakmur.ui.theme.AppTheme
 import java.util.Calendar
 import com.metromultindo.tirtamakmur.R
+import com.metromultindo.tirtamakmur.ui.components.ErrorDialog2
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -244,7 +245,7 @@ fun LoginScreen(
 
     // Error dialog
     if (errorState.value != null) {
-        ErrorDialog(
+        ErrorDialog2(
             errorCode = errorState.value!!.first,
             errorMessage = errorState.value!!.second,
             onDismiss = { viewModel.clearError() }

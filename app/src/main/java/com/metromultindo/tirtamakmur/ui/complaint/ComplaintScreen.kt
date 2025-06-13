@@ -68,6 +68,7 @@ import androidx.compose.material.icons.outlined.Description
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.ui.text.input.KeyboardType
+import com.metromultindo.tirtamakmur.ui.components.ErrorDialog2
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,13 +122,12 @@ fun ComplaintScreen(
     var tempPhoneNumber by remember { mutableStateOf("") }
 
     // Customer status
-    var isCustomer by remember { mutableStateOf(customerNumber != null && customerNumber.isNotEmpty()) }
+    var isCustomer by remember { mutableStateOf(true) }
 
     // Initialize customer search number if provided
     LaunchedEffect(customerNumber) {
         if (!customerNumber.isNullOrEmpty()) {
             customerSearchNumber = customerNumber
-            viewModel.loadCustomerInfo(customerNumber)
         }
     }
 
@@ -137,7 +137,6 @@ fun ComplaintScreen(
             editPhoneNumber = customer.cust_phone ?: ""
         }
     }
-
     // Helper functions (same as SelfMeterScreen)
     fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -173,9 +172,9 @@ fun ComplaintScreen(
     fun isValidWhatsAppNumber(phoneNumber: String): Boolean {
         val cleanNumber = phoneNumber.replace(" ", "").replace("-", "")
         return when {
-            cleanNumber.startsWith("0") -> cleanNumber.length > 7
-            cleanNumber.startsWith("62") -> cleanNumber.length > 10 // +62 + minimal 8 digit
-            cleanNumber.startsWith("+62") -> cleanNumber.length > 10 // +62 + minimal 8 digit
+            cleanNumber.startsWith("0") && cleanNumber.length >= 9 -> true
+            cleanNumber.startsWith("62") && cleanNumber.length >= 10 -> true
+            cleanNumber.startsWith("+62") && cleanNumber.length >= 11 -> true
             else -> false
         }
     }
@@ -516,10 +515,10 @@ fun ComplaintScreen(
                         OutlinedTextField(
                             value = customerSearchNumber,
                             onValueChange = { customerSearchNumber = it },
-                            label = { Text("No Sambung") },
+                            label = { Text("Id Pel / No Samb") },
                             modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Icon(Icons.Default.Numbers, "No Sambung") },
-                            placeholder = { Text("Masukkan No Sambung") }
+                            leadingIcon = { Icon(Icons.Default.Numbers, "Id Pel / No Samb") },
+                            placeholder = { Text("Ketik Id Pel / No Samb") }
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -564,7 +563,7 @@ fun ComplaintScreen(
                         ) {
                             Column {
                                 BillDetailRow(
-                                    label = "No Sambung",
+                                    label = "Id Pel / No Samb",
                                     value = customer.cust_code ?: "",
                                     icon = Icons.Default.Numbers
                                 )
@@ -876,13 +875,6 @@ fun ComplaintScreen(
                                         return@Button
                                     }
 
-                                    Log.d("ComplaintScreen", "Customer form data:")
-                                    Log.d("ComplaintScreen", "Name: '${customer.cust_name ?: ""}'")
-                                    Log.d("ComplaintScreen", "Customer Number: '${customer.cust_code ?: ""}'")
-                                    Log.d("ComplaintScreen", "Phone: '$editPhoneNumber'")
-                                    Log.d("ComplaintScreen", "Address: '${customer.cust_address ?: ""}'")
-                                    Log.d("ComplaintScreen", "Complaint: '$complaintText'")
-
                                     viewModel.submitComplaint(
                                         name = customer.cust_name ?: "",
                                         customerName = customer.cust_name ?: "",
@@ -1162,12 +1154,6 @@ fun ComplaintScreen(
                                     return@Button
                                 }
 
-                                Log.d("ComplaintScreen", "Non-customer form data:")
-                                Log.d("ComplaintScreen", "Name: '$inputName'")
-                                Log.d("ComplaintScreen", "Phone: '$phoneNumber'")
-                                Log.d("ComplaintScreen", "Address: '$addressValue'")
-                                Log.d("ComplaintScreen", "Complaint: '$complaintText'")
-
                                 viewModel.submitComplaint(
                                     name = inputName,
                                     customerName = "",
@@ -1203,7 +1189,7 @@ fun ComplaintScreen(
             LoadingDialog(isLoading.value || phoneUpdateLoading.value)
 
             errorState.value?.let { error ->
-                ErrorDialog(
+                ErrorDialog2(
                     errorCode = error.first,
                     errorMessage = error.second,
                     onDismiss = { viewModel.clearError() }

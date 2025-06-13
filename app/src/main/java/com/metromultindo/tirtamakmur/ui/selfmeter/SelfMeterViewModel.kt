@@ -44,8 +44,21 @@ class SelfMeterViewModel @Inject constructor(
     private val _phoneUpdateLoading = MutableStateFlow(false)
     val phoneUpdateLoading: StateFlow<Boolean> = _phoneUpdateLoading
 
+    private val _savedCustomerNumber = MutableStateFlow<String?>(null)
+    val savedCustomerNumber: StateFlow<String?> = _savedCustomerNumber
+
     init {
         checkLoginStatus()
+    }
+
+    private fun isValidWhatsAppNumber(phoneNumber: String): Boolean {
+        val cleanNumber = phoneNumber.replace(" ", "").replace("-", "")
+        return when {
+            cleanNumber.startsWith("0") && cleanNumber.length >= 9 -> true
+            cleanNumber.startsWith("62") && cleanNumber.length >= 10 -> true
+            cleanNumber.startsWith("+62") && cleanNumber.length >= 11 -> true
+            else -> false
+        }
     }
 
     private fun checkLoginStatus() {
@@ -53,10 +66,11 @@ class SelfMeterViewModel @Inject constructor(
             val customerNumber = userPreferences.customerNumber.first()
             val customerName = userPreferences.customerName.first()
 
+            _savedCustomerNumber.value = customerNumber // Simpan customer number
+
             if (!customerNumber.isNullOrEmpty() && !customerName.isNullOrEmpty()) {
                 _isLoggedIn.value = true
-                // Auto load customer info if logged in
-                loadCustomerInfo(customerNumber)
+                // HAPUS auto load customer info
             } else {
                 _isLoggedIn.value = false
             }
@@ -154,6 +168,13 @@ class SelfMeterViewModel @Inject constructor(
             _phoneUpdateLoading.value = true
             _errorState.value = null
 
+            // Validasi format nomor WhatsApp
+            if (!isValidWhatsAppNumber(phone)) {
+                _errorState.value = Pair(400, "Format nomor WhatsApp tidak valid. Harus diawali 0 atau +62 dan minimal 8 digit")
+                _phoneUpdateLoading.value = false
+                return@launch
+            }
+
             try {
                 val result = repository.updateCustomerPhone(customerNumber, phone)
                 result.fold(
@@ -229,6 +250,10 @@ class SelfMeterViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun setError(code: Int, message: String) {
+        _errorState.value = Pair(code, message)
     }
 
     fun clearError() {

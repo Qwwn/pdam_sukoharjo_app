@@ -68,8 +68,9 @@ class ComplaintViewModel @Inject constructor(
     private fun isValidWhatsAppNumber(phoneNumber: String): Boolean {
         val cleanNumber = phoneNumber.replace(" ", "").replace("-", "")
         return when {
-            cleanNumber.startsWith("0") -> cleanNumber.length > 7
-            cleanNumber.startsWith("+62") -> cleanNumber.length > 10 // +62 + minimal 8 digit
+            cleanNumber.startsWith("0") && cleanNumber.length >= 9 -> true
+            cleanNumber.startsWith("62") && cleanNumber.length >= 10 -> true
+            cleanNumber.startsWith("+62") && cleanNumber.length >= 11 -> true
             else -> false
         }
     }
@@ -193,18 +194,6 @@ class ComplaintViewModel @Inject constructor(
                 // Determine the name to use (use customer name if customer)
                 val nameToUse = if (isCustomer && customerName.isNotEmpty()) customerName else name
 
-                // Log all input parameters for debugging
-                Log.d(TAG, "=== SUBMIT COMPLAINT DEBUG ===")
-                Log.d(TAG, "Input name: '$name'")
-                Log.d(TAG, "Input customerName: '$customerName'")
-                Log.d(TAG, "Input isCustomer: $isCustomer")
-                Log.d(TAG, "Input customerNumber: '$customerNumber'")
-                Log.d(TAG, "Input phoneNumber: '$phoneNumber'")
-                Log.d(TAG, "Input complaintText: '$complaintText'")
-                Log.d(TAG, "Input address: '$address'")
-                Log.d(TAG, "Final nameToUse: '$nameToUse'")
-                Log.d(TAG, "================================")
-
                 // Validate inputs
                 if (nameToUse.isEmpty()) {
                     Log.e(TAG, "Validation failed: Name is empty")
@@ -215,7 +204,7 @@ class ComplaintViewModel @Inject constructor(
 
                 if (isCustomer && (customerNumber.isNullOrEmpty())) {
                     Log.e(TAG, "Validation failed: Customer number is empty for customer")
-                    _errorState.value = Pair(400, "Nomor sambungan harus diisi untuk pelanggan")
+                    _errorState.value = Pair(400, "Id Pel / No Samb harus diisi untuk pelanggan")
                     _isLoading.value = false
                     return@launch
                 }
@@ -272,17 +261,6 @@ class ComplaintViewModel @Inject constructor(
                         // Don't fail, just log warning
                     }
                 }
-
-                Log.d(TAG, "All validations passed, submitting to repository...")
-                Log.d(TAG, "Repository call parameters:")
-                Log.d(TAG, "- name: '$nameToUse'")
-                Log.d(TAG, "- address: '$address'")
-                Log.d(TAG, "- phone: '$phoneNumber'")
-                Log.d(TAG, "- message: '$complaintText'")
-                Log.d(TAG, "- isCustomer: $isCustomer")
-                Log.d(TAG, "- customerNo: '$customerNumber'")
-                Log.d(TAG, "- latitude: $latitude")
-                Log.d(TAG, "- longitude: $longitude")
 
                 val result = complaintRepository.submitComplaint(
                     name = nameToUse,

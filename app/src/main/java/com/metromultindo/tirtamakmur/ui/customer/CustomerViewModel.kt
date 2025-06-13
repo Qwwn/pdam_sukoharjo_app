@@ -41,7 +41,7 @@ class CustomerViewModel @Inject constructor(
                 loadCustomerData()
             } ?: run {
                 _isLoading.value = false
-                _errorState.value = Pair(0, "Nomor pelanggan tidak ditemukan. Silakan login kembali.")
+                _errorState.value = Pair(0, "Id Pel / No Samb tidak ditemukan. Silakan login kembali.")
             }
         }
     }
