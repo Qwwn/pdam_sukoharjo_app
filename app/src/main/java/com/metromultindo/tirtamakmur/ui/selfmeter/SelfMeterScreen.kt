@@ -50,8 +50,11 @@ import java.util.*
 import kotlin.coroutines.resume
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import com.metromultindo.tirtamakmur.ui.customer.InfoRow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,6 +98,8 @@ fun SelfMeterScreen(
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
     var showLocationDialog by remember { mutableStateOf(false) }
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
+
+    var showWhatsAppErrorDialog by remember { mutableStateOf(false) }
 
     // Phone edit states
     var isEditingPhone by remember { mutableStateOf(false) }
@@ -352,7 +357,7 @@ fun SelfMeterScreen(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // Customer Number Input (if not logged in and customer info not loaded)
@@ -369,7 +374,7 @@ fun SelfMeterScreen(
                             fontWeight = FontWeight.Bold
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
                             value = customerNumber,
@@ -380,7 +385,7 @@ fun SelfMeterScreen(
                             placeholder = { Text("Masukkan nomor sambung") }
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Button(
                             onClick = {
@@ -402,46 +407,61 @@ fun SelfMeterScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             // Customer Info and Forms (when customer info is available)
             customerInfo.value?.let { info ->
-                // Customer Info - moved to top
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(4.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    // Customer Info - moved to top
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .padding(16.dp)
+                    ) {
+                        Column {
 
-                        InfoRow(
-                            label = "Nomor Sambungan",
-                            value = info.custCode,
-                            icon = Icons.Default.Numbers
-                        )
+                            BillDetailRow(
+                                label = "Nomor Sambungan",
+                                value = info.custCode,
+                                icon = Icons.Default.Numbers
+                            )
 
-                        InfoRow(
-                            label = "Nama",
-                            value = info.name,
-                            icon = Icons.Default.Person
-                        )
+                            BillDetailRow(
+                                label = "Nama",
+                                value = info.name,
+                                icon = Icons.Default.Person
+                            )
 
-                        InfoRow(
-                            label = "Alamat",
-                            value = info.address,
-                            icon = Icons.Default.Home
-                        )
+                            BillDetailRow(
+                                label = "Alamat",
+                                value = info.address,
+                                icon = Icons.Default.Home
+                            )
 
-                        InfoRow(
-                            label = "Tarif",
-                            value = info.tariffClass,
-                            icon = Icons.Outlined.Receipt
-                        )
+                            BillDetailRow(
+                                label = "Tarif",
+                                value = info.tariffClass,
+                                icon = Icons.Outlined.Receipt
+                            )
+                            BillDetailRow(
+                                label = "Status",
+                                value = info.status,
+                                icon = if (info.status.uppercase() == "AKTIF") Icons.Outlined.CheckCircle else Icons.Outlined.ErrorOutline,
+                                iconTint = if (info.status.uppercase() == "AKTIF") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Phone Number Section - moved below customer info
                 Card(
@@ -462,7 +482,7 @@ fun SelfMeterScreen(
                                 placeholder = { Text("Contoh: 081234567890") }
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -532,7 +552,7 @@ fun SelfMeterScreen(
                                 )
                             )
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.padding(bottom = 12.dp)
@@ -548,8 +568,8 @@ fun SelfMeterScreen(
 
                                 Text(
                                     text = "Pastikan no whatsapp sudah sesuai, akan digunakan untuk komunikasi jika ada pemakaian atau tagihan melonjak.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Normal,
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                             }
@@ -557,7 +577,7 @@ fun SelfMeterScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Meter Reading Form - removed stand meter input, only photo and location
                 Card(
@@ -620,7 +640,7 @@ fun SelfMeterScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Box(
                             modifier = Modifier
@@ -696,9 +716,18 @@ fun SelfMeterScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Submit Button - updated requirements
+                        // Tambahkan state untuk error WhatsApp
+                        var showWhatsAppErrorDialog by remember { mutableStateOf(false) }
+
+// Modifikasi Submit Button
                         Button(
                             onClick = {
+                                // Validasi nomor WhatsApp terlebih dahulu
+                                if (editPhoneNumber.isEmpty()) {
+                                    showWhatsAppErrorDialog = true
+                                    return@Button
+                                }
+
                                 val customerCode = if (isLoggedIn.value) {
                                     info.custCode
                                 } else {
@@ -721,11 +750,42 @@ fun SelfMeterScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Kirim Data Meter")
                         }
+
+// Tambahkan dialog error WhatsApp di bagian dialog (setelah dialog lainnya)
+                        if (showWhatsAppErrorDialog) {
+                            AlertDialog(
+                                onDismissRequest = { showWhatsAppErrorDialog = false },
+                                icon = {
+                                    Icon(
+                                        Icons.Default.Warning,
+                                        contentDescription = "Warning",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(32.dp)
+                                    )
+                                },
+                                title = {
+                                    Text(
+                                        "No. WhatsApp Belum Diisi",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                },
+                                text = {
+                                    Text("No wathsapp belum di isi, silahkan isi terlebih dahulu.")
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = { showWhatsAppErrorDialog = false }
+                                    ) {
+                                        Text("OK")
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Info Card (same as before)
             Card(
@@ -767,16 +827,20 @@ fun SelfMeterScreen(
 
                     BenefitItem(
                         title = "Bukti Pendukung",
-                        description = "Data yang dikirimkan menjadi bukti pendukung jika terjadi perbedaan dalam perhitungan tagihan."
+                        description = "Baca meter mandiri membantu mencegah kesalahan perhitungan tagihan yang mungkin terjadi karena kesalahan petugas atau faktor lain. Data photo Meter Air yang dikirimkan akan menjadi bukti pendukung jika terjadi perbedaan dalam perhitungan tagihan."
                     )
 
                     BenefitItem(
                         title = "Pencatatan Transparan",
-                        description = "Dengan fitur ini, pencatatan jadi lebih transparan, cepat, dan tanpa perlu menunggu petugas."
+                        description = "Dengan fitur ini, pencatatan jadi lebih transparan, cepat, dan tanpa perlu menunggu petugas datang."
                     )
                     BenefitItem(
-                        title = "Komunikasi Layanan",
-                        description = "Dengan nomor WhatsApp yang sudah diperbarui.",
+                        title = "Tagihan Melonjak",
+                        description = "Melalui fitur catat meter mandiri, ini akan menjadi solusi bersama untuk petugas catat meter PDAM Tirta Jati dan pelanggan di saat pembaca meter mendapati rumah yang terkunci atau ditinggal pergi oleh pemiliknya, kondisi tersebut tentunya menyulitkan petugas untuk mendapatkan photo/angka stand meter, Sehingga petugas tidak memiliki informasi untuk menentukan besar tagihan rekening pelanggan tersebut, dan tagihan pun diambil dari angka rata-rata pemakaian dalam beberapa bulan sebelumnya, dan kejadian tersebut akan menjadi potensi pemakaian/tagihan melonjak.",
+                    )
+                    BenefitItem(
+                        title = "Lebih praktis dan efisien",
+                        description = "Melalui fitur ini, pelanggan dapat mencatat secara mudah hanya dengan mengirim photo meter air, data yang dikirimkan akan diverifikasi dan selanjutnya digunakan untuk menghitung tagihan.",
                         isLast = true
                     )
 
@@ -1014,5 +1078,46 @@ fun BenefitItem(
         if (!isLast) {
             Spacer(modifier = Modifier.height(4.dp))
         }
+    }
+}
+
+@Composable
+fun BillDetailRow(
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isBold: Boolean = false,
+    iconTint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary
+
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(20.dp),
+                tint = iconTint,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal
+            )
+        }
+
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+
+            )
     }
 }

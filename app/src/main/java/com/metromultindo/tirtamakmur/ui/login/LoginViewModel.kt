@@ -30,7 +30,6 @@ class LoginViewModel @Inject constructor(
     val loginSuccess: StateFlow<Boolean> = _loginSuccess
 
     init {
-        // Check if user is already logged in
         viewModelScope.launch {
             userPreferences.customerNumber.collect { savedNumber ->
                 if (!savedNumber.isNullOrEmpty()) {
@@ -46,35 +45,41 @@ class LoginViewModel @Inject constructor(
 
     fun login() {
         if (_customerNumber.value.isEmpty()) {
-            _errorState.value = Pair(0, "Nomor pelanggan tidak boleh kosong")
+            _errorState.value = Pair(1, "Mohon masukkan nomor pelanggan")
             return
         }
 
         _isLoading.value = true
 
         viewModelScope.launch {
-            try {
-                // Lakukan API call untuk mendapatkan info tagihan
-                val result = billRepository.getBillInfo(_customerNumber.value)
-                _isLoading.value = false
-
-                when (result) {
-                    is ApiResult.Success -> {
-                        // Simpan data pelanggan dari hasil API
+            when (val result = billRepository.getBillInfo(_customerNumber.value)) {
+                is ApiResult.Success -> {
+                    if (result.data.cust_code.isNullOrEmpty()) {
+                        _errorState.value = Pair(102, "Pelanggan tidak ditemukan")
+                    } else {
                         userPreferences.saveCustomerNumber(_customerNumber.value)
-                        userPreferences.saveCustomerName(result.data.cust_name)
-
+                        userPreferences.saveCustomerName(result.data.cust_name ?: "")
                         _loginSuccess.value = true
                     }
-                    is ApiResult.Error -> {
-                        _errorState.value = Pair(result.code, result.message)
-                    }
                 }
-            } catch (e: Exception) {
-                _errorState.value = Pair(-1, e.message ?: "Error saat login")
-                _isLoading.value = false
+                is ApiResult.Error -> {
+                    val userFriendlyMessage = when (result.code) {
+                        102 -> "Pelanggan tidak ditemukan. Periksa kembali nomor Anda."
+                        in 400..499 -> "Data tidak valid (${result.code})"
+                        in 500..599 -> "Server sedang mengalami gangguan"
+                        -1 -> "Periksa nomor Id Pelanggan, Pastikan nomor Id Pelanggan sudah benar"
+                        else -> result.message ?: "Terjadi kesalahan (${result.code})"
+                    }
+                    _errorState.value = Pair(result.code, userFriendlyMessage)
+                }
             }
+            _isLoading.value = false
         }
+    }
+
+    private fun isValidCustomerNumber(number: String): Boolean {
+        // Contoh validasi: minimal 6 digit angka
+        return number.length >= 6 && number.all { it.isDigit() }
     }
 
     fun clearError() {

@@ -35,6 +35,7 @@ data class SelfMeterCustomerInfo(
     val name: String,
     val address: String,
     val tariffClass: String,
+    val status: String,
     val startMeter: String,
     val phone: String
 

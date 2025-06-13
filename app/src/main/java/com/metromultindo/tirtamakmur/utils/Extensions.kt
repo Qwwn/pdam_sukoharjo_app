@@ -6,7 +6,6 @@ import java.util.Locale
 
 fun getErrorMessage(errorCode: Int, defaultMessage: String): String {
     return when (errorCode) {
-        -1 -> "Terjadi kesalahan koneksi. Silakan coba lagi nanti."
         100 -> "Request data sukses"
         101 -> "Pelanggan tidak memiliki tagihan"
         102 -> "Pelanggan tidak ditemukan"

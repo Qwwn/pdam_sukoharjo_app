@@ -106,6 +106,12 @@ class SelfMeterViewModel @Inject constructor(
                                 else -> "Tidak diketahui"
                             }
 
+                            val custStatus = if (response.cust_data.isNotEmpty()) {
+                                response.cust_data.first().status.toString()
+                            } else {
+                                "Tidak diketahui"
+                            }
+
                             // Handle startMeter and convert to String
                             val custStartMeter = if (response.cust_data.isNotEmpty()) {
                                 response.cust_data.first().startMeter.toString()
@@ -119,7 +125,8 @@ class SelfMeterViewModel @Inject constructor(
                                 address = custAddress,
                                 tariffClass = custTariffClass,
                                 startMeter = custStartMeter,
-                                phone = custPhone
+                                phone = custPhone,
+                                status = custStatus
                             )
 
                             Log.d("SelfMeterViewModel", "Customer info loaded successfully for: $custCode")
@@ -129,7 +136,7 @@ class SelfMeterViewModel @Inject constructor(
                     },
                     onFailure = { exception ->
                         Log.e("SelfMeterViewModel", "Error loading customer info", exception)
-                        _errorState.value = Pair(500, "Gagal memuat data pelanggan")
+                        _errorState.value = Pair(500, "Periksa nomor Id Pelanggan, Pastikan nomor Id Pelanggan sudah benar")
                     }
                 )
             } catch (e: Exception) {

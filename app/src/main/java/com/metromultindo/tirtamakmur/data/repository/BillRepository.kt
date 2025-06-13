@@ -6,26 +6,30 @@ import javax.inject.Inject
 import android.util.Log
 
 class BillRepository @Inject constructor() {
-    // BillRepository.kt
     suspend fun getBillInfo(customerNumber: String): ApiResult<CustomerResponse> {
         return try {
             val response = RetrofitInstance.api.getBillInfo(customerNumber)
 
-            Log.d(
-                "BillRepository",
-                "Response received: message_code=${response.message_code}, message_text=${response.message_text}"
-            )
+            Log.d("BillRepository", "Raw response: $response")
 
-            // API returns error:true and message_code != 100 for errors
-            if (response.error || response.message_code != 100) {
-                Log.d("BillRepository", "Returning Error with code: ${response.message_code}")
-                ApiResult.Error(response.message_code, response.message_text)
+            if (response.error) {
+                // Handle error response
+                val errorMessage = response.message_text ?: "Pelanggan tidak ditemukan"
+                Log.d("BillRepository", "API Error: ${response.message_code} - $errorMessage")
+                ApiResult.Error(response.message_code, errorMessage)
             } else {
-                ApiResult.Success(response)
+                // Handle success response
+                if (response.message_code == 100) {
+                    ApiResult.Success(response)
+                } else {
+                    ApiResult.Error(response.message_code,
+                        response.message_text ?: "Terjadi kesalahan")
+                }
             }
         } catch (e: Exception) {
-            Log.e("BillRepository", "Exception occurred: ${e.message}")
-            ApiResult.Error(-1, e.message ?: "Unknown error occurred")
+            Log.e("BillRepository", "Network error: ${e.message}", e)
+            ApiResult.Error(-1, "Periksa nomor Id Pelanggan, Pastikan nomor Id Pelanggan sudah benar")
         }
     }
 }
+
