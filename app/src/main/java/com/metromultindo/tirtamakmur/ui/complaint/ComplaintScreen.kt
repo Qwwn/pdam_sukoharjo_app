@@ -55,6 +55,19 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.resume
 import com.metromultindo.tirtamakmur.R
+import com.metromultindo.tirtamakmur.data.model.CustomerResponse
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,17 +83,25 @@ fun ComplaintScreen(
     // Use FusedLocationProviderClient directly
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-    // State management
-    var cameraFilePath by remember { mutableStateOf<String?>(null) }
-    var cameraPhotoTaken by remember { mutableStateOf(false) }
+    // State management from ViewModel
     val isLoading = viewModel.isLoading.collectAsState()
     val errorState = viewModel.errorState.collectAsState()
+    val customerInfo = viewModel.customerInfo.collectAsState()
     val complaintSubmitted = viewModel.complaintSubmitted.collectAsState()
-    var addressValue by remember { mutableStateOf("") }
-    var customerNo by remember { mutableStateOf(customerNumber ?: "") }
-    var phoneNumber by remember { mutableStateOf("") }
+
+    // Local state
+    var customerSearchNumber by remember { mutableStateOf("") }
+    var editPhoneNumber by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    var cameraFilePath by remember { mutableStateOf<String?>(null) }
+    var cameraPhotoTaken by remember { mutableStateOf(false) }
     var complaintText by remember { mutableStateOf("") }
+    var addressValue by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
     var inputName by remember { mutableStateOf(customerName ?: "") }
+    val phoneUpdateSuccess = viewModel.phoneUpdateSuccess.collectAsState()
+    val phoneUpdateLoading = viewModel.phoneUpdateLoading.collectAsState()
 
     // Location states
     var currentLatitude by remember { mutableStateOf<Double?>(null) }
@@ -93,15 +114,31 @@ fun ComplaintScreen(
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
     var showLocationDialog by remember { mutableStateOf(false) }
+    var showWhatsAppErrorDialog by remember { mutableStateOf(false) }
 
-    // Image state
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var cameraUri by remember { mutableStateOf<Uri?>(null) }
+    // Phone edit states
+    var isEditingPhone by remember { mutableStateOf(false) }
+    var tempPhoneNumber by remember { mutableStateOf("") }
 
     // Customer status
     var isCustomer by remember { mutableStateOf(customerNumber != null && customerNumber.isNotEmpty()) }
 
-    // Helper function to check location permission
+    // Initialize customer search number if provided
+    LaunchedEffect(customerNumber) {
+        if (!customerNumber.isNullOrEmpty()) {
+            customerSearchNumber = customerNumber
+            viewModel.loadCustomerInfo(customerNumber)
+        }
+    }
+
+    // Initialize phone number when customer info is loaded
+    LaunchedEffect(customerInfo.value) {
+        customerInfo.value?.let { customer ->
+            editPhoneNumber = customer.cust_phone ?: ""
+        }
+    }
+
+    // Helper functions (same as SelfMeterScreen)
     fun hasLocationPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             context,
@@ -113,20 +150,17 @@ fun ComplaintScreen(
                 ) == PackageManager.PERMISSION_GRANTED
     }
 
-    // Helper function to check if location services are enabled
     fun isLocationEnabled(): Boolean {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
-    // Helper function to open location settings
     fun openLocationSettings() {
         try {
             val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
             context.startActivity(intent)
         } catch (e: Exception) {
-            // Fallback to general settings if location settings not available
             try {
                 val intent = Intent(Settings.ACTION_SETTINGS)
                 context.startActivity(intent)
@@ -136,7 +170,16 @@ fun ComplaintScreen(
         }
     }
 
-    // Helper function to get current location
+    fun isValidWhatsAppNumber(phoneNumber: String): Boolean {
+        val cleanNumber = phoneNumber.replace(" ", "").replace("-", "")
+        return when {
+            cleanNumber.startsWith("0") -> cleanNumber.length > 7
+            cleanNumber.startsWith("62") -> cleanNumber.length > 10 // +62 + minimal 8 digit
+            cleanNumber.startsWith("+62") -> cleanNumber.length > 10 // +62 + minimal 8 digit
+            else -> false
+        }
+    }
+
     suspend fun getCurrentLocation(): Pair<Double?, Double?> = suspendCancellableCoroutine { continuation ->
         if (!hasLocationPermission()) {
             continuation.resume(Pair(null, null))
@@ -173,7 +216,6 @@ fun ComplaintScreen(
         val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
 
         if (fineLocationGranted || coarseLocationGranted) {
-            // Permission granted, get location
             isGettingLocation = true
             coroutineScope.launch {
                 val (lat, lng) = getCurrentLocation()
@@ -236,7 +278,7 @@ fun ComplaintScreen(
     val createImageFile = {
         try {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val imageFileName = "JPEG_${timeStamp}_"
+            val imageFileName = "COMPLAINT_${timeStamp}_"
             val storageDir = context.getExternalFilesDir("Pictures")
 
             val imageFile = File.createTempFile(imageFileName, ".jpg", storageDir)
@@ -283,7 +325,6 @@ fun ComplaintScreen(
         }
     }
 
-    // Functions
     fun checkAndRequestCameraPermission() {
         when {
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
@@ -349,10 +390,10 @@ fun ComplaintScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary,
                     navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                title = { Text(stringResource(id = R.string.complaint_screen_title)) },
+                title = { Text("Form Pengaduan") },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.Default.ArrowBack, stringResource(id = R.string.back))
+                        Icon(Icons.Default.ArrowBack, "Kembali")
                     }
                 }
             )
@@ -365,44 +406,24 @@ fun ComplaintScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // Info Card
+            Spacer(modifier = Modifier.height(4.dp))
+            // Customer Status Selection
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
                 colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Form Pengaduan",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Silakan isi formulir pengaduan di bawah ini",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    // Customer Status Selection
                     Text(
                         text = "Status Pelanggan",
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
                     )
 
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Customer option
@@ -424,7 +445,7 @@ fun ComplaintScreen(
                                 .clickable {
                                     isCustomer = true
                                     if (!customerName.isNullOrEmpty()) inputName = customerName
-                                    if (!customerNumber.isNullOrEmpty()) customerNo = customerNumber
+                                    if (!customerNumber.isNullOrEmpty()) customerSearchNumber = customerNumber
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -456,7 +477,9 @@ fun ComplaintScreen(
                                 .clickable {
                                     isCustomer = false
                                     inputName = ""
-                                    customerNo = ""
+                                    customerSearchNumber = ""
+                                    editPhoneNumber = ""
+                                    viewModel.clearCustomerInfo()
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -469,239 +492,715 @@ fun ComplaintScreen(
                             )
                         }
                     }
+                }
+            }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-                    // Form fields
-                    OutlinedTextField(
-                        value = inputName,
-                        onValueChange = { inputName = it },
-                        label = { Text("Nama") },
-                        modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Outlined.Person, "Nama") },
-                        readOnly = isCustomer && !customerName.isNullOrEmpty()
-                    )
-
-                    if (isCustomer) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        OutlinedTextField(
-                            value = customerNo,
-                            onValueChange = { customerNo = it },
-                            label = { Text("Nomor Sambungan") },
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Icon(Icons.Default.Numbers, "Nomor Sambungan") },
-                            readOnly = isCustomer && !customerNumber.isNullOrEmpty()
+            // Customer Search (if customer and no customer info)
+            if (isCustomer && customerInfo.value == null) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Cari Data Pelanggan",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = phoneNumber,
-                        onValueChange = { phoneNumber = it },
-                        label = { Text("Nomor Telepon") },
-                        modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Default.Phone, "Telepon") }
-                    )
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = addressValue,
-                        onValueChange = { addressValue = it },
-                        label = { Text("Alamat") },
-                        modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Outlined.Home, "Alamat") }
-                    )
+                        OutlinedTextField(
+                            value = customerSearchNumber,
+                            onValueChange = { customerSearchNumber = it },
+                            label = { Text("No Sambung") },
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = { Icon(Icons.Default.Numbers, "No Sambung") },
+                            placeholder = { Text("Masukkan No Sambung") }
+                        )
 
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = complaintText,
-                        onValueChange = { complaintText = it },
-                        modifier = Modifier.fillMaxWidth().height(150.dp),
-                        label = { Text("Isi Pengaduan") },
-                        minLines = 5,
-                        maxLines = 8
-                    )
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Location Section
-                    Text(
-                        text = "Lokasi Pengaduan",
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    // Location Card with OutlinedTextField style
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(4.dp))
-                            .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline,
-                                shape = RoundedCornerShape(4.dp)
-                            )
-                            .background(Color.Transparent)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(bottom = 4.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.LocationOn,
-                                            contentDescription = "Lokasi",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Status: $locationStatus",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = when {
-                                                locationStatus.contains("Berhasil") -> MaterialTheme.colorScheme.primary
-                                                locationStatus.contains("Gagal") || locationStatus.contains("tidak aktif") -> MaterialTheme.colorScheme.error
-                                                else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                            }
-                                        )
-                                    }
-
-                                    if (currentLatitude != null && currentLongitude != null) {
-                                        Text(
-                                            text = String.format("%.6f, %.6f", currentLatitude, currentLongitude),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(start = 28.dp)
-                                        )
-                                    } else {
-                                        Text(
-                                            text = "Tekan tombol untuk mengambil lokasi",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(start = 28.dp)
-                                        )
-                                    }
-                                }
-
-                                if (isGettingLocation) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                } else {
-                                    IconButton(
-                                        onClick = { requestLocation() },
-                                        modifier = Modifier.size(40.dp)
-                                    ) {
-                                        Icon(
-                                            Icons.Default.LocationOn,
-                                            contentDescription = "Ambil Lokasi",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
+                        Button(
+                            onClick = {
+                                viewModel.loadCustomerInfo(customerSearchNumber)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = customerSearchNumber.isNotEmpty() && !isLoading.value
+                        ) {
+                            if (isLoading.value) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
                             }
+                            Text("Cari Data Pelanggan")
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
-                    // Image Upload Section
-                    Text(
-                        text = "Lampiran Gambar",
-                        style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    if (imageUri != null) {
+            // Customer Info Display (if customer and has customer info)
+            if (isCustomer && customerInfo.value != null) {
+                customerInfo.value?.let { customer ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+                    ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                .padding(16.dp)
                         ) {
-                            Image(
-                                painter = rememberAsyncImagePainter(
-                                    ImageRequest.Builder(context).data(imageUri).build()
-                                ),
-                                contentDescription = "Gambar Pengaduan",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Fit
-                            )
+                            Column {
+                                BillDetailRow(
+                                    label = "No Sambung",
+                                    value = customer.cust_code ?: "",
+                                    icon = Icons.Default.Numbers
+                                )
 
-                            IconButton(
-                                onClick = {
-                                    imageUri = null
-                                    currentLatitude = null
-                                    currentLongitude = null
-                                    locationStatus = "Belum diambil"
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(4.dp)
-                                    .size(32.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                                        RoundedCornerShape(16.dp)
-                                    )
-                            ) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Hapus Gambar",
-                                    tint = MaterialTheme.colorScheme.error
+                                BillDetailRow(
+                                    label = "Nama",
+                                    value = customer.cust_name ?: "",
+                                    icon = Icons.Default.Person
+                                )
+
+                                BillDetailRow(
+                                    label = "Alamat",
+                                    value = customer.cust_address ?: "",
+                                    icon = Icons.Default.Home
                                 )
                             }
                         }
-                    } else {
-                        OutlinedButton(
-                            onClick = { showImageSourceDialog = true },
-                            modifier = Modifier.fillMaxWidth().height(56.dp)
-                        ) {
-                            Icon(Icons.Outlined.Image, contentDescription = "Upload Gambar")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Pilih Gambar")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Phone Number Section - UPDATED
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            if (isEditingPhone) {
+                                OutlinedTextField(
+                                    value = tempPhoneNumber,
+                                    onValueChange = { tempPhoneNumber = it },
+                                    label = { Text("No. WhatsApp") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    leadingIcon = { Icon(Icons.Default.Phone, "WhatsApp") },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                    isError = tempPhoneNumber.isNotEmpty() && !isValidWhatsAppNumber(tempPhoneNumber), // Tambah validasi visual
+                                    supportingText = if (tempPhoneNumber.isNotEmpty() && !isValidWhatsAppNumber(tempPhoneNumber)) {
+                                        { Text("Format nomor tidak valid. Harus diawali 0 atau 62 dan minimal 9 digit", color = MaterialTheme.colorScheme.error) }
+                                    } else null
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            isEditingPhone = false
+                                            tempPhoneNumber = ""
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Batal")
+                                    }
+
+                                    Button(
+                                        onClick = {
+                                            viewModel.updateCustomerPhone(customer.cust_code ?: "", tempPhoneNumber)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        enabled = tempPhoneNumber.isNotEmpty() &&
+                                                isValidWhatsAppNumber(tempPhoneNumber) && // Tambah validasi
+                                                !phoneUpdateLoading.value
+                                    ) {
+                                        if (phoneUpdateLoading.value) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(16.dp),
+                                                strokeWidth = 2.dp,
+                                                color = MaterialTheme.colorScheme.onPrimary
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                        }
+                                        Text("Simpan")
+                                    }
+                                }
+                            } else {
+                                OutlinedTextField(
+                                    value = if (editPhoneNumber.isNotEmpty()) editPhoneNumber else "",
+                                    onValueChange = { },
+                                    label = { Text("No. WhatsApp") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    leadingIcon = { Icon(Icons.Default.Phone, "WhatsApp") },
+                                    readOnly = true,
+                                    enabled = false,
+                                    placeholder = { Text("Belum diatur") },
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                isEditingPhone = true
+                                                tempPhoneNumber = editPhoneNumber
+                                            }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Edit,
+                                                contentDescription = "Edit Nomor WhatsApp",
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                        disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        disabledTrailingIconColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(bottom = 12.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = "Pastikan no whatsapp sudah sesuai, akan digunakan untuk komunikasi terkait pengaduan.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Normal,
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Complaint Form
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(4.dp),
+                        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            OutlinedTextField(
+                                value = complaintText,
+                                onValueChange = { complaintText = it },
+                                modifier = Modifier.fillMaxWidth().height(150.dp),
+                                label = { Text("Isi Pengaduan") },
+                                minLines = 5,
+                                maxLines = 8,
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Photo section
+                            if (imageUri != null) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                ) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(
+                                            ImageRequest.Builder(context).data(imageUri).build()
+                                        ),
+                                        contentDescription = "Foto Pengaduan",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Fit
+                                    )
+
+                                    IconButton(
+                                        onClick = {
+                                            imageUri = null
+                                            currentLatitude = null
+                                            currentLongitude = null
+                                            locationStatus = "Belum diambil"
+                                            cameraFilePath = null
+                                            cameraPhotoTaken = false
+                                        },
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(4.dp)
+                                            .size(32.dp)
+                                            .background(
+                                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                                RoundedCornerShape(16.dp)
+                                            )
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = "Hapus Foto",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            } else {
+                                OutlinedButton(
+                                    onClick = { showImageSourceDialog = true },
+                                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                                ) {
+                                    Icon(Icons.Outlined.PhotoCamera, contentDescription = "Ambil Foto")
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Ambil Foto Bukti")
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Location section
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.outline,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .background(Color.Transparent)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.padding(bottom = 4.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.LocationOn,
+                                                    contentDescription = "Lokasi",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = "Lokasi: $locationStatus",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    color = when {
+                                                        locationStatus.contains("Berhasil") -> MaterialTheme.colorScheme.primary
+                                                        locationStatus.contains("Gagal") || locationStatus.contains("tidak aktif") -> MaterialTheme.colorScheme.error
+                                                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                    }
+                                                )
+                                            }
+
+                                            if (currentLatitude != null && currentLongitude != null) {
+                                                Text(
+                                                    text = String.format("%.6f, %.6f", currentLatitude, currentLongitude),
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.padding(start = 28.dp)
+                                                )
+                                            }
+                                        }
+
+                                        if (isGettingLocation) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp),
+                                                strokeWidth = 2.dp,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        } else {
+                                            IconButton(
+                                                onClick = { requestLocation() },
+                                                modifier = Modifier.size(40.dp)
+                                            ) {
+                                                Icon(
+                                                    Icons.Default.LocationOn,
+                                                    contentDescription = "Ambil Lokasi",
+                                                    tint = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Button(
+                                onClick = {
+                                    // Validasi nomor WhatsApp terlebih dahulu
+                                    if (editPhoneNumber.isEmpty()) {
+                                        showWhatsAppErrorDialog = true
+                                        return@Button
+                                    }
+
+                                    if (!isValidWhatsAppNumber(editPhoneNumber)) {
+                                        viewModel.setError(400, "Format nomor WhatsApp tidak valid. Harus diawali 0 atau 62 dan minimal 9 digit")
+                                        return@Button
+                                    }
+
+                                    // Validasi foto dan lokasi
+                                    if (imageUri == null) {
+                                        viewModel.setError(400, "Foto bukti wajib disertakan")
+                                        return@Button
+                                    }
+
+                                    if (currentLatitude == null || currentLongitude == null) {
+                                        viewModel.setError(400, "Lokasi wajib disertakan")
+                                        return@Button
+                                    }
+
+                                    Log.d("ComplaintScreen", "Customer form data:")
+                                    Log.d("ComplaintScreen", "Name: '${customer.cust_name ?: ""}'")
+                                    Log.d("ComplaintScreen", "Customer Number: '${customer.cust_code ?: ""}'")
+                                    Log.d("ComplaintScreen", "Phone: '$editPhoneNumber'")
+                                    Log.d("ComplaintScreen", "Address: '${customer.cust_address ?: ""}'")
+                                    Log.d("ComplaintScreen", "Complaint: '$complaintText'")
+
+                                    viewModel.submitComplaint(
+                                        name = customer.cust_name ?: "",
+                                        customerName = customer.cust_name ?: "",
+                                        isCustomer = true,
+                                        customerNumber = customer.cust_code ?: "",
+                                        phoneNumber = editPhoneNumber,
+                                        complaintText = complaintText,
+                                        address = customer.cust_address ?: "",
+                                        imageUri = imageUri,
+                                        cameraFilePath = if (cameraPhotoTaken) cameraFilePath else null,
+                                        latitude = currentLatitude,
+                                        longitude = currentLongitude
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
+                                enabled = complaintText.isNotEmpty() &&
+                                        editPhoneNumber.isNotEmpty() &&
+                                        isValidWhatsAppNumber(editPhoneNumber) && // Validasi WhatsApp
+                                        imageUri != null && // Validasi foto wajib
+                                        currentLatitude != null && currentLongitude != null && // Validasi lokasi wajib
+                                        !isLoading.value
+                            ) {
+                                Icon(Icons.Outlined.Send, null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Kirim Pengaduan")
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Non-Customer Form dengan layout terpisah
+            if (!isCustomer) {
+                // Card 1: Nama dan Alamat
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
 
-            // Submit Button
-            Button(
-                onClick = {
-                    viewModel.submitComplaint(
-                        name = inputName,
-                        customerName = customerName ?: "",
-                        isCustomer = isCustomer,
-                        customerNumber = if (isCustomer) customerNo else null,
-                        phoneNumber = phoneNumber,
-                        complaintText = complaintText,
-                        address = addressValue,
-                        imageUri = imageUri,
-                        cameraFilePath = if (cameraPhotoTaken) cameraFilePath else null,
-                        latitude = currentLatitude,
-                        longitude = currentLongitude
-                    )
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Icon(Icons.Outlined.Send, null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Kirim Pengaduan")
+                        OutlinedTextField(
+                            value = inputName,
+                            onValueChange = { inputName = it },
+                            label = { Text("Nama") },
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = { Icon(Icons.Outlined.Person, "Nama") }
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        OutlinedTextField(
+                            value = addressValue,
+                            onValueChange = { addressValue = it },
+                            label = { Text("Alamat") },
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = { Icon(Icons.Outlined.Home, "Alamat") }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Card 2: No WhatsApp
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        OutlinedTextField(
+                            value = phoneNumber,
+                            onValueChange = { phoneNumber = it },
+                            label = { Text("No. WhatsApp") },
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = { Icon(Icons.Default.Phone, "WhatsApp") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            isError = phoneNumber.isNotEmpty() && !isValidWhatsAppNumber(phoneNumber), // Tambah validasi visual
+                            supportingText = if (phoneNumber.isNotEmpty() && !isValidWhatsAppNumber(phoneNumber)) {
+                                { Text("Format nomor tidak valid. Harus diawali 0 atau 62 dan minimal 9 digit", color = MaterialTheme.colorScheme.error) }
+                            } else null
+                        )
+
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = "Pastikan no whatsapp sudah sesuai, akan digunakan untuk komunikasi terkait pengaduan.",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Card 3: Isi Pengaduan, Gambar, dan Lokasi
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    colors = CardDefaults.cardColors(containerColor = AppTheme.colors.cardBackground)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        OutlinedTextField(
+                            value = complaintText,
+                            onValueChange = { complaintText = it },
+                            modifier = Modifier.fillMaxWidth().height(100.dp),
+                            label = { Text("Isi Pengaduan") },
+                            minLines = 2,
+                            maxLines = 8,
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Photo section
+                        if (imageUri != null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                            ) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(
+                                        ImageRequest.Builder(context).data(imageUri).build()
+                                    ),
+                                    contentDescription = "Foto Pengaduan",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Fit
+                                )
+
+                                IconButton(
+                                    onClick = {
+                                        imageUri = null
+                                        currentLatitude = null
+                                        currentLongitude = null
+                                        locationStatus = "Belum diambil"
+                                        cameraFilePath = null
+                                        cameraPhotoTaken = false
+                                    },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(32.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                            RoundedCornerShape(16.dp)
+                                        )
+                                ) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Hapus Foto",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { showImageSourceDialog = true },
+                                modifier = Modifier.fillMaxWidth().height(56.dp)
+                            ) {
+                                Icon(Icons.Outlined.PhotoCamera, contentDescription = "Ambil Foto")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Ambil Foto Bukti")
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Location section
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(4.dp))
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    shape = RoundedCornerShape(4.dp)
+                                )
+                                .background(Color.Transparent)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(bottom = 4.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.LocationOn,
+                                                contentDescription = "Lokasi",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = "Lokasi: $locationStatus",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = when {
+                                                    locationStatus.contains("Berhasil") -> MaterialTheme.colorScheme.primary
+                                                    locationStatus.contains("Gagal") || locationStatus.contains("tidak aktif") -> MaterialTheme.colorScheme.error
+                                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                                }
+                                            )
+                                        }
+
+                                        if (currentLatitude != null && currentLongitude != null) {
+                                            Text(
+                                                text = String.format("%.6f, %.6f", currentLatitude, currentLongitude),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.padding(start = 28.dp)
+                                            )
+                                        }
+                                    }
+
+                                    if (isGettingLocation) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            strokeWidth = 2.dp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    } else {
+                                        IconButton(
+                                            onClick = { requestLocation() },
+                                            modifier = Modifier.size(40.dp)
+                                        ) {
+                                            Icon(
+                                                Icons.Default.LocationOn,
+                                                contentDescription = "Ambil Lokasi",
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = {
+                                // Validasi format nomor WhatsApp
+                                if (!isValidWhatsAppNumber(phoneNumber)) {
+                                    viewModel.setError(400, "Format nomor WhatsApp tidak valid. Harus diawali 0 atau 62 dan minimal 9 digit")
+                                    return@Button
+                                }
+
+                                // Validasi foto dan lokasi
+                                if (imageUri == null) {
+                                    viewModel.setError(400, "Foto bukti wajib disertakan")
+                                    return@Button
+                                }
+
+                                if (currentLatitude == null || currentLongitude == null) {
+                                    viewModel.setError(400, "Lokasi wajib disertakan")
+                                    return@Button
+                                }
+
+                                Log.d("ComplaintScreen", "Non-customer form data:")
+                                Log.d("ComplaintScreen", "Name: '$inputName'")
+                                Log.d("ComplaintScreen", "Phone: '$phoneNumber'")
+                                Log.d("ComplaintScreen", "Address: '$addressValue'")
+                                Log.d("ComplaintScreen", "Complaint: '$complaintText'")
+
+                                viewModel.submitComplaint(
+                                    name = inputName,
+                                    customerName = "",
+                                    isCustomer = false,
+                                    customerNumber = null,
+                                    phoneNumber = phoneNumber,
+                                    complaintText = complaintText,
+                                    address = addressValue,
+                                    imageUri = imageUri,
+                                    cameraFilePath = if (cameraPhotoTaken) cameraFilePath else null,
+                                    latitude = currentLatitude,
+                                    longitude = currentLongitude
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            enabled = inputName.isNotEmpty() &&
+                                    phoneNumber.isNotEmpty() &&
+                                    isValidWhatsAppNumber(phoneNumber) && // Validasi WhatsApp
+                                    addressValue.isNotEmpty() &&
+                                    complaintText.isNotEmpty() &&
+                                    imageUri != null && // Validasi foto wajib
+                                    currentLatitude != null && currentLongitude != null && // Validasi lokasi wajib
+                                    !isLoading.value
+                        ) {
+                            Icon(Icons.Outlined.Send, null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Kirim Pengaduan")
+                        }
+                    }
+                }
             }
 
-            // Dialogs
-            LoadingDialog(isLoading.value)
+            LoadingDialog(isLoading.value || phoneUpdateLoading.value)
 
             errorState.value?.let { error ->
                 ErrorDialog(
@@ -730,6 +1229,73 @@ fun ComplaintScreen(
                 )
             }
 
+            // TAMBAHAN BARU - Phone update success dialog
+            if (phoneUpdateSuccess.value) {
+                AlertDialog(
+                    onDismissRequest = {
+                        // Reset phone update state dan editing state
+                        viewModel.resetPhoneUpdateState()
+                        editPhoneNumber = tempPhoneNumber
+                        isEditingPhone = false
+                        tempPhoneNumber = ""
+                    },
+                    icon = {
+                        Icon(
+                            Icons.Default.CheckCircle,
+                            contentDescription = "Success",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    },
+                    title = { Text("Nomor WhatsApp Berhasil Diperbarui") },
+                    text = {
+                        Text("Nomor WhatsApp Anda telah berhasil diperbarui.")
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                // Reset phone update state dan editing state
+                                viewModel.resetPhoneUpdateState()
+                                editPhoneNumber = tempPhoneNumber
+                                isEditingPhone = false
+                                tempPhoneNumber = ""
+                            }
+                        ) { Text("OK") }
+                    }
+                )
+            }
+            // WhatsApp error dialog
+            if (showWhatsAppErrorDialog) {
+                AlertDialog(
+                    onDismissRequest = { showWhatsAppErrorDialog = false },
+                    icon = {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = "Warning",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    },
+                    title = {
+                        Text(
+                            "No. WhatsApp Belum Diisi",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    text = {
+                        Text("No wathsapp belum di isi, silahkan isi terlebih dahulu.")
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = { showWhatsAppErrorDialog = false }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+
+            // Other dialogs (showImageSourceDialog, showLocationPermissionDialog, etc.)
             if (showImageSourceDialog) {
                 AlertDialog(
                     onDismissRequest = { showImageSourceDialog = false },
@@ -832,5 +1398,45 @@ fun ComplaintScreen(
                 )
             }
         }
+    }
+}
+
+// Tambahkan ini di bagian bawah ComplaintScreen.kt
+@Composable
+fun BillDetailRow(
+    label: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isBold: Boolean = false,
+    iconTint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.primary
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(20.dp),
+                tint = iconTint,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal
+            )
+        }
+
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+        )
     }
 }

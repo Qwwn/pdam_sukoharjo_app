@@ -5,8 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import com.metromultindo.tirtamakmur.data.api.ApiService
 import com.metromultindo.tirtamakmur.data.api.RetrofitInstance
 import com.metromultindo.tirtamakmur.data.model.ComplaintResponse
+import com.metromultindo.tirtamakmur.data.model.CustomerResponse
 import dagger.hilt.android.qualifiers.ApplicationContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -17,10 +19,19 @@ import java.io.FileOutputStream
 import javax.inject.Inject
 
 class ComplaintRepository @Inject constructor(
+    private val apiService: ApiService,
     @ApplicationContext private val context: Context
 ) {
     private val TAG = "ComplaintRepository"
-
+    suspend fun getCustomerInfo(customerNumber: String): Result<CustomerResponse> {
+        return try {
+            val response = apiService.getBillInfo(customerNumber)
+            Result.success(response)
+        } catch (e: Exception) {
+            Log.e("SelfMeterRepository", "Error getting customer info", e)
+            Result.failure(e)
+        }
+    }
     suspend fun submitComplaint(
         name: String,
         address: String,

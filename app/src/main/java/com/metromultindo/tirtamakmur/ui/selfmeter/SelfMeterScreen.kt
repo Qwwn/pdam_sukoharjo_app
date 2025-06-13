@@ -379,10 +379,10 @@ fun SelfMeterScreen(
                         OutlinedTextField(
                             value = customerNumber,
                             onValueChange = { customerNumber = it },
-                            label = { Text("Nomor Sambung") },
+                            label = { Text("No Sambung") },
                             modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Icon(Icons.Default.Numbers, "Nomor Sambungan") },
-                            placeholder = { Text("Masukkan nomor sambung") }
+                            leadingIcon = { Icon(Icons.Default.Numbers, "No Sambung") },
+                            placeholder = { Text("Masukkan No Sambung") }
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -429,7 +429,7 @@ fun SelfMeterScreen(
                         Column {
 
                             BillDetailRow(
-                                label = "Nomor Sambungan",
+                                label = "No Sambung",
                                 value = info.custCode,
                                 icon = Icons.Default.Numbers
                             )
@@ -479,7 +479,6 @@ fun SelfMeterScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 leadingIcon = { Icon(Icons.Default.Phone, "WhatsApp") },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                                placeholder = { Text("Contoh: 081234567890") }
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
@@ -714,7 +713,7 @@ fun SelfMeterScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Tambahkan state untuk error WhatsApp
                         var showWhatsAppErrorDialog by remember { mutableStateOf(false) }
@@ -901,7 +900,7 @@ fun SelfMeterScreen(
                     },
                     title = { Text("Nomor WhatsApp Berhasil Diperbarui") },
                     text = {
-                        Text("Nomor WhatsApp Anda telah berhasil diperbarui. Anda akan menerima notifikasi penting melalui nomor ini.")
+                        Text("Nomor WhatsApp Anda telah berhasil diperbarui.")
                     },
                     confirmButton = {
                         Button(
