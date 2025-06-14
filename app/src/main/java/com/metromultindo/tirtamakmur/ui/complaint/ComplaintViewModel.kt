@@ -117,7 +117,7 @@ class ComplaintViewModel @Inject constructor(
                     },
                     onFailure = { exception ->
                         Log.e("SelfMeterViewModel", "Error loading customer info", exception)
-                        _errorState.value = Pair(500, "Periksa nomor Id Pelanggan, Pastikan nomor Id Pelanggan sudah benar")
+                        _errorState.value = Pair(500, "Periksa nomor ID Pelanggan, Pastikan nomor ID Pelanggan sudah benar")
                     }
                 )
             } catch (e: Exception) {
@@ -204,7 +204,7 @@ class ComplaintViewModel @Inject constructor(
 
                 if (isCustomer && (customerNumber.isNullOrEmpty())) {
                     Log.e(TAG, "Validation failed: Customer number is empty for customer")
-                    _errorState.value = Pair(400, "Id Pel / No Samb harus diisi untuk pelanggan")
+                    _errorState.value = Pair(400, "ID Pel / No Samb harus diisi untuk pelanggan")
                     _isLoading.value = false
                     return@launch
                 }

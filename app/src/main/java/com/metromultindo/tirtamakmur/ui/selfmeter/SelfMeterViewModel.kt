@@ -150,7 +150,7 @@ class SelfMeterViewModel @Inject constructor(
                     },
                     onFailure = { exception ->
                         Log.e("SelfMeterViewModel", "Error loading customer info", exception)
-                        _errorState.value = Pair(500, "Periksa nomor Id Pelanggan, Pastikan nomor Id Pelanggan sudah benar")
+                        _errorState.value = Pair(500, "Periksa nomor ID Pelanggan, Pastikan nomor ID Pelanggan sudah benar")
                     }
                 )
             } catch (e: Exception) {

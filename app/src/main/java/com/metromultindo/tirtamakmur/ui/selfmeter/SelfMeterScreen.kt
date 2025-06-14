@@ -397,10 +397,10 @@ fun SelfMeterScreen(
                         OutlinedTextField(
                             value = customerNumber,
                             onValueChange = { customerNumber = it },
-                            label = { Text("Id Pel / No Samb") },
+                            label = { Text("ID Pel / No Samb") },
                             modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = { Icon(Icons.Default.Numbers, "Id Pel / No Samb") },
-                            placeholder = { Text("Ketik Id Pel / No Samb") }
+                            leadingIcon = { Icon(Icons.Default.Numbers, "ID Pel / No Samb") },
+                            placeholder = { Text("Ketik ID Pel / No Samb") }
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -447,7 +447,7 @@ fun SelfMeterScreen(
                         Column {
 
                             BillDetailRow(
-                                label = "Id Pel / No Samb",
+                                label = "ID Pel / No Samb",
                                 value = info.custCode,
                                 icon = Icons.Default.Numbers
                             )

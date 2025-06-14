@@ -1,6 +1,6 @@
 package com.metromultindo.tirtamakmur.data.api
 
-import com.metromultindo.tirtamakmur.BuildConfig
+import com.metromultindo.tirtamakmur.Keys // Import Keys object
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -31,7 +31,7 @@ object RetrofitInstance {
 
     val api: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl(BuildConfig.API_BASE_URL)
+            .baseUrl(Keys.BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()

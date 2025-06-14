@@ -28,7 +28,7 @@ class BillRepository @Inject constructor() {
             }
         } catch (e: Exception) {
             Log.e("BillRepository", "Network error: ${e.message}", e)
-            ApiResult.Error(-1, "Periksa nomor Id Pelanggan, Pastikan nomor Id Pelanggan sudah benar")
+            ApiResult.Error(-1, "Periksa nomor ID Pelanggan, Pastikan nomor ID Pelanggan sudah benar")
         }
     }
 }

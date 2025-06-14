@@ -45,7 +45,7 @@ class LoginViewModel @Inject constructor(
 
     fun login() {
         if (_customerNumber.value.isEmpty()) {
-            _errorState.value = Pair(1, "Mohon masukkan Id Pel / No Samb")
+            _errorState.value = Pair(1, "Mohon masukkan ID Pel / No Samb")
             return
         }
 
@@ -67,7 +67,7 @@ class LoginViewModel @Inject constructor(
                         102 -> "Pelanggan tidak ditemukan. Periksa kembali nomor Anda."
                         in 400..499 -> "Data tidak valid (${result.code})"
                         in 500..599 -> "Server sedang mengalami gangguan"
-                        -1 -> "Periksa nomor Id Pelanggan, Pastikan nomor Id Pelanggan sudah benar"
+                        -1 -> "Periksa nomor ID Pelanggan, Pastikan nomor ID Pelanggan sudah benar"
                         else -> result.message ?: "Terjadi kesalahan (${result.code})"
                     }
                     _errorState.value = Pair(result.code, userFriendlyMessage)

@@ -40,6 +40,16 @@ fun OnboardingScreen(
             title = stringResource(id = R.string.title_third_carousell),
             description = stringResource(id = R.string.content_third_carousell),
             imageResId = R.drawable.ic_news
+        ),
+        CarouselItem(
+            title = stringResource(id = R.string.title_fourth_carousel),
+            description = stringResource(id = R.string.content_fourth_carousel),
+            imageResId = R.drawable.ic_complaint
+        ),
+        CarouselItem(
+            title = stringResource(id = R.string.title_fifth_carousel),
+            description = stringResource(id = R.string.content_fifth_carousel),
+            imageResId = R.drawable.ic_meter_reading
         )
     )
 
@@ -55,7 +65,7 @@ fun OnboardingScreen(
     // Auto scroll the carousel
     LaunchedEffect(Unit) {
         while (true) {
-            delay(3000)
+            delay(4000) //
             val nextPage = (pagerState.currentPage + 1) % carouselItems.size
             pagerState.animateScrollToPage(nextPage)
         }

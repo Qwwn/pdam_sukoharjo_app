@@ -39,7 +39,6 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "API_BASE_URL", "\"http://skhj.ddns.net:81/\"")
             ndk {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")
@@ -48,7 +47,6 @@ android {
             }
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"http://skhj.ddns.net:81/\"")
             ndk {
                 abiFilters.add("armeabi-v7a")
                 abiFilters.add("arm64-v8a")

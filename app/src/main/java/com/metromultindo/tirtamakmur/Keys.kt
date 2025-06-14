@@ -6,6 +6,9 @@ object Keys {
     }
 
     private external fun getNativeApiKey(): String
+    external fun getNativeBaseUrl(): String
 
     val API_KEY: String = getNativeApiKey()
+    val BASE_URL: String = getNativeBaseUrl()
+
 }
