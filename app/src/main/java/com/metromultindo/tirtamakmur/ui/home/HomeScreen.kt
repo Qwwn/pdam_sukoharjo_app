@@ -185,7 +185,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "${getTimeBasedGreeting()}, ${customerName.value ?: "Pelanggan Yth"}",
+                        text = "${getTimeBasedGreeting()}, ${customerName.value ?: "Pelanggan Yth."}",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
