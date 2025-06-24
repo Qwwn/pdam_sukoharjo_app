@@ -7,15 +7,15 @@ plugins {
 }
 
 android {
-    namespace = "com.metromultindo.tirtamakmur"
+    namespace = "com.metromultindo.tirtapanrannuangku"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.metromultindo.tirtamakmur"
+        applicationId = "com.metromultindo.tirtapanrannuangku"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.2"
+        versionCode = 1
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -45,6 +45,8 @@ android {
                 abiFilters.add("x86")
                 abiFilters.add("x86_64")
             }
+            // Enable in-app update testing
+            manifestPlaceholders["enableInAppUpdateTesting"] = "true"
         }
         release {
             ndk {
@@ -57,6 +59,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            manifestPlaceholders["enableInAppUpdateTesting"] = "false"
         }
     }
 
@@ -106,6 +109,14 @@ configurations.all {
 }
 
 dependencies {
+    // IMPROVED: Updated In-App Update dependencies
+    implementation ("com.google.android.play:app-update:2.1.0")
+    implementation ("com.google.android.play:app-update-ktx:2.1.0")
+
+    // ADDED: Review API untuk meminta rating setelah update
+    implementation ("com.google.android.play:review:2.0.1")
+    implementation ("com.google.android.play:review-ktx:2.0.1")
+
     // Core Android dependencies
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
@@ -143,9 +154,6 @@ dependencies {
 
     // HANYA Firebase Messaging tanpa Analytics
     implementation("com.google.firebase:firebase-messaging-ktx")
-
-    // HAPUS firebase-analytics-ktx sepenuhnya
-    // implementation("com.google.firebase:firebase-analytics-ktx") // DIHAPUS!
 
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.0")

@@ -30,5 +30,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "tirtamakmur"
+rootProject.name = "tirtapanrannuangku"
 include(":app")

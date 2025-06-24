@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="welcome_title">Info Tagihan</string>
-    <string name="welcome_titleV2">Selamat Datang di SITAMPAN\nSistem Informasi Tagihan Air Minum Pasti NyamAN\nPERUMDA AIR MINUM\nTIRTA MAKMUR\nKAB.SUKOHARJO</string>
+    <string name="welcome_titleV2">Selamat Datang di PERUMDA AIR MINUM\nTIRTA PANRANNUANGKU KAB.TAKALAR</string>
     <string name="app_name">Aplikasi Layanan Pelanggan</string>
     <string name="welcome_message">Selamat Datang</string>
-    <string name="entity_name">PERUMDA AIR MINUM\nTIRTA MAKMUR\nKABUPATEN SUKOHARJO</string>
-    <string name="app_logo">Logo PDAM Tirta Makmur</string>
+    <string name="entity_name">PERUMDA AIR MINUM\nTIRTA PANRANNUANGKU\nKABUPATEN TAKALAR</string>
+    <string name="app_logo">Logo PDAM Tirta Panrannuangku</string>
     <!-- Form labels -->
     <string name="customer_number">ID Pel / No Samb</string>
     <string name="customer_number_hint">Ketik ID Pel / No Samb</string>
@@ -16,7 +16,7 @@
     <string name="fcm_news_title">Berita Terbaru</string>
     <string name="fcm_announcement_title">Pengumuman</string>
     <string name="fcm_default_body">Ada update terbaru untuk Anda</string>
-    <string name="app_name2">Wbill Tirta Makmur</string>
+    <string name="app_name2">Wbill PDAM Tirta Panrannuangku</string>
 
     <!-- Bill information -->
     <string name="customer_info">Info Pelanggan</string>
@@ -85,7 +85,7 @@
 
     <!-- Halaman carousell pertama -->
     <string name="title_first_carousell">Informasi Pelanggan</string>
-    <string name="content_first_carousell">Dapatkan informasi tagihan PERUMDA AIR MINUM TIRTA MAKMUR KABUPATEN SUKOHARJO</string>
+    <string name="content_first_carousell">Dapatkan informasi tagihan PERUMDA AIR MINUM TIRTA PANRANNUANGKU KABUPATEN TAKALAR</string>
     <string name="title_second_carousell">Informasi Pemadaman</string>
     <string name="content_second_carousell">Dapatkan informasi pemadaman di lokasi Anda</string>
     <string name="title_third_carousell">Berita</string>

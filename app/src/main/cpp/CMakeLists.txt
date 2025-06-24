@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.22.1)
 
 # Add this line with your project name
-project("tirtamakmur")
+project("tirtapanrannuangku")
 
 add_library(
         native-lib

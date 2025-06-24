@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.metromultindo.tirtamakmur"
+<manifest package="com.metromultindo.tirtapanrannuangku"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -42,7 +42,7 @@
         android:required="false" />
 
     <application
-        android:name="com.metromultindo.tirtamakmur.PdamApplication"
+        android:name="com.metromultindo.tirtapanrannuangku.PdamApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -50,15 +50,15 @@
         android:label="@string/app_name2"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.tirtamakmur"
+        android:theme="@style/Theme.tirtapanrannuangku"
         tools:targetApi="31"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true">
 
         <activity
-            android:name="com.metromultindo.tirtamakmur.MainActivity"
+            android:name="com.metromultindo.tirtapanrannuangku.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.tirtamakmur"
+            android:theme="@style/Theme.tirtapanrannuangku"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize"
             android:taskAffinity=""
@@ -98,18 +98,18 @@
 
             <!-- Enhanced: Notification action intents dengan priority tinggi -->
             <intent-filter android:priority="1000">
-                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_NEWS_DETAIL" />
+                <action android:name="com.metromultindo.tirtapanrannuangku.NOTIFICATION_NEWS_DETAIL" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <intent-filter android:priority="1000">
-                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_NEWS_LIST" />
+                <action android:name="com.metromultindo.tirtapanrannuangku.NOTIFICATION_NEWS_LIST" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
             <!-- PERBAIKAN: Action button intent filter -->
             <intent-filter android:priority="1000">
-                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_ACTION_NEWS_DETAIL" />
+                <action android:name="com.metromultindo.tirtapanrannuangku.NOTIFICATION_ACTION_NEWS_DETAIL" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
@@ -124,7 +124,7 @@
 
         <!-- Enhanced FCM Service configuration -->
         <service
-            android:name="com.metromultindo.tirtamakmur.services.PdamFCMService"
+            android:name="com.metromultindo.tirtapanrannuangku.services.PdamFCMService"
             android:exported="false"
             android:stopWithTask="false"
             android:enabled="true">
@@ -185,11 +185,11 @@
 
         <!-- Enhanced: Broadcast receiver untuk notification events -->
         <receiver
-            android:name="com.metromultindo.tirtamakmur.services.NotificationBroadcastReceiver"
+            android:name="com.metromultindo.tirtapanrannuangku.services.NotificationBroadcastReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.metromultindo.pdam_app_v2.NOTIFICATION_CLICKED" />
+                <action android:name="com.metromultindo.tirtapanrannuangku.NOTIFICATION_CLICKED" />
             </intent-filter>
         </receiver>
 

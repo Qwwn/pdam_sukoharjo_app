@@ -1,6 +1,6 @@
 # Aplikasi PDAM Sukoharjo
 
-Aplikasi resmi Perumda Air Minum Tirta Makmur Kabupaten Sukoharjo untuk pelayanan pelanggan.
+Aplikasi resmi Perumda Air Minum Tirta Panrannuangku Kabupaten Sukoharjo untuk pelayanan pelanggan.
 
 ![Logo PDAM](app/src/main/res/mipmap-xxxhdpi/ic_launcher.png)
 
